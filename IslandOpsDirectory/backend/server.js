@@ -11,6 +11,10 @@ app.use(express.json());
 
 app.use('/api/auth', require('./routes/authRoutes'));
 
+app.get('/', (req, res) => {
+    res.send('Welcome to the Backend API');
+});
+
 app.listen(PORT, () => {
-    console.log(`✅ Server running on http://localhost:${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
 });
