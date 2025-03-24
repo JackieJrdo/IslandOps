@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const {createUser, findEmail, findUsername} = require('../models/User');
+const authenticateUser = require("../middleware/authMiddleware");
 require('dotenv').config();
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -52,5 +53,9 @@ router.post('/login', async (req, res) => {
     res.json({ message: 'Login successful!', token });
 }
 );
+
+router.get("/protected", authenticateUser, (req, res) => {
+    res.json({ message: "Welcome to the protected route!", user: req.user });
+});
 
 module.exports = router;
