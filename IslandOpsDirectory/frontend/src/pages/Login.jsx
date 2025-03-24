@@ -16,9 +16,32 @@ const Login = () => {
   const [password, setPassword] = useState('');
 
   // form submission handler -> to be connected to backend
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     // TODO: Implement authentication logic here
+    try {
+      // post request to submit inputted username & password to backend
+      const res = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await res.json();
+      // stores token on local storage so that token storage is persistent
+      if (res.ok) {
+        localStorage.setItem("token", data.token);
+        alert("Login successful!");
+      }
+      else {
+        alert("Login failed");
+      }
+    }
+    catch (err) {
+      console.error("Login error: ", err);
+      alert("There was an issue. Please try again.");
+    };    
+
   };
 
   return (
