@@ -1,0 +1,232 @@
+/*imported tourney for headings/inputs, roboto for regular text */
+@import url('https://fonts.googleapis.com/css2?family=Tourney:wght@400;600&family=Roboto:wght@400;500&display=swap');
+
+/* default margins and padding */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* main container - takes full viewport height with beige/green background */
+.login-container {
+  min-height: 100vh;
+  width: 100vw;
+  background-color: #CED0B4;
+  font-family: 'Roboto', sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* top nav bar - contains logo and links */
+.nav-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 4rem;
+  width: 100%;
+}
+
+/* "IslandOps" text in top left corner */
+.logo {
+  font-size: 1.5rem;
+  color: #68472C;
+  font-weight: 500;
+}
+
+/* nav links container in top right */
+.nav-links {
+  display: flex;
+  gap: 2rem;
+}
+
+/* individual nav links (home, about, contact us) */
+.nav-links a {
+  color: #68472C;
+  text-decoration: none;
+  font-size: 1rem;
+}
+
+/* main content area - split into left and right sections */
+.login-content {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 4rem;
+  gap: 4rem;
+  flex: 1;
+  align-items: center;
+  max-width: 2000px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* left section - contains welcome text and island graphic */
+.left-section {
+  flex: 1.2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 0;
+  margin-left: 5rem;
+  margin-bottom: 3rem;
+}
+
+/* "welcome back." text in large Tourney font */
+.welcome-text {
+  font-family: 'Tourney', sans-serif;
+  font-size: 5rem;
+  color: #68472C;
+  margin-bottom: 0.5rem;
+  line-height: 1;
+  align-self: flex-start;
+  margin-left: 5rem;
+  font-weight: bold;
+}
+
+/* "let's sign you in." text below welcome */
+.signin-text {
+  font-size: 2rem;
+  color: #68472C;
+  margin-bottom: 3rem;
+  align-self: flex-start;
+  margin-left: 5rem;
+}
+
+/* low-poly island graphic below signin text */
+.island-image {
+  max-width: 150%;
+  height: auto;
+  margin-top: -2rem;
+  align-self: center;
+}
+
+/* right section - contains login form */
+.right-section {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 4rem;
+}
+
+/* login form container */
+form {
+  width: 100%;
+  max-width: 500px;
+}
+
+/* username and password input groups */
+.input-group {
+  display: flex;
+  margin-bottom: 2rem;
+  border-radius: 12px;
+  overflow: hidden;
+  height: 4rem;
+}
+
+/* square container for person/lock icons */
+.icon-container {
+  background-color: #8C8F74;
+  padding: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+}
+
+/* person icon (username) and lock icon (password) */
+.icon-container img {
+  width: 28px;
+  height: 28px;
+}
+
+/* text input fields next to icons */
+input {
+  flex: 1;
+  padding: 1.2rem;
+  border: none;
+  background-color: #AFB191;
+  color: #ffffff;
+  font-family: 'Tourney', sans-serif;
+  font-size: 1.2rem;
+  font-weight: bolder;
+}
+
+/* placeholder text in input fields */
+input::placeholder {
+  color: #dbdccf;
+  opacity: 1;
+  font-weight: bold;
+}
+
+input:focus {
+  outline: none;
+}
+
+/* orange "sign in" button below inputs */
+.continue-btn {
+  width: 100%;
+  padding: 1.2rem;
+  background-color: #CC5723;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  margin: 2.5rem 0 1.5rem;
+  height: 4rem;
+}
+
+.continue-btn:hover {
+  opacity: 0.9;
+}
+
+/* "don't have an account? sign up" text at bottom */
+.signup-text {
+  text-align: center;
+  color: #68472C;
+}
+
+/* orange "sign up" link */
+.signup-text a {
+  color: #CC5723;
+  text-decoration: none;
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+
+.signup-text a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 1200px) {
+  .login-content {
+    gap: 4rem; /* reduce space between left and right sections */
+  }
+  
+  .welcome-text {
+    font-size: 3.5rem; /* smaller welcome text */
+  }
+  
+  .right-section {
+    padding-top: 4rem;
+  }
+}
+
+/* For screens under 1024px */
+@media (max-width: 1024px) {
+  .login-content {
+    padding: 2rem;
+    gap: 2rem; /* Further reduce section gap */
+  }
+  
+  .nav-bar {
+    padding: 1.5rem 2rem; /* Reduce nav padding */
+  }
+}
