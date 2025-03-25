@@ -1,9 +1,9 @@
 const pool = require('../database');
 // function to insert user into database
-const createUser = async (username, email, hashed_password) => {
+const createUser = async (username, email, hashed_password, firstname, lastname) => {
     const result = await pool.query(
-        'INSERT INTO "user" (username, email, password) VALUES ($1, $2, $3) RETURNING *',
-        [username, email, hashed_password]
+        'INSERT INTO "user" (username, email, password, firstname, lastname) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+        [username, email, hashed_password, firstname, lastname]
     );
     return result.rows[0];
 };
