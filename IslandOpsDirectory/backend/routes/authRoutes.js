@@ -10,10 +10,10 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 // register user
 router.post('/register', async (req, res) => {
-    const {username, email, password} = req.body;
+    const {firstname, lastname, username, email, password} = req.body;
     
     // checks to make sure all fields are given
-    if (!username || !email || !password) {
+    if (!firstname || !lastname || !username || !email || !password) {
         return res.status(400).json({error: 'Missing fields!'});
     }
     // checks if user is already registered by seeing if email is already used
@@ -24,7 +24,7 @@ router.post('/register', async (req, res) => {
     // hashes password
     const hashed_password = await bcrypt.hash(password, 10);
     // adds the new user into database
-    const new_user = await createUser(username, email, hashed_password);
+    const new_user = await createUser(username, email, hashed_password, firstname, lastname);
     // generates JWT for new user
     const token = jwt.sign({userId: new_user.id}, JWT_SECRET, {expiresIn: '7d'});
     // send message to frontend saying user registered successfully

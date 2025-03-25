@@ -23,10 +23,39 @@ const Register = () => {
   const [password, setPassword] = useState('');
 
   // form submission handler -> to be connected to backend
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     // TODO: Implement registration logic here
     // backend expects: { firstname, lastname, email, username, password }
+    const newUser = {
+      firstname: firstName,
+      lastname: lastName,
+      email: email,
+      username: username,
+      password: password
+    };
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newUser),
+      });
+
+      const data = await res.json();
+
+      if(res.ok) {
+        alert("Registration successful!");
+        //localStorage.setItem("token", data.token);
+        window.location.href = "/";
+      }
+      else{
+        alert("Registration failed.");
+      }
+    }
+    catch (err) {
+      console.error("Registration error: ", err);
+      alert("There was an issue. Please try again.");
+    }
   };
 
   return (
