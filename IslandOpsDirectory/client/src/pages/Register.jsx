@@ -22,9 +22,91 @@ const Register = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
+  // Regular Expressions, or "Regex" CRASH COURSE (for reference in other form validation)
+
+  // Regex is super popular in form validation but looks like alien language, so here I will provide like a dictionary 
+  // to refer to for specific form formats!
+
+  //                          CHARACTERS
+  
+  // \d - one digit from 0-9
+  // \w - word character of ASCII letter, digit, or underscore
+  // \s - whitespace character like space, tab, return, newline
+  // \D - One character that is not a digit
+  // \W - One character that is not a word character
+  // \S - One character that is not a whitespace character
+  // . - any character except line break
+  // \. - A period (needs to be separated by \)
+  // \ - escapes a special character
+
+
+  //                          QUANTIFIERS
+
+  // + - One or more
+  // {3} - Exactly 3 times
+  // {2,4} - 3 to 4 times (exclude 2)
+  // {3,} - 3 or more times
+  // * - 0 or more times
+  // ? - once or none
+
+  //                           LOGIC
+
+  // | - OR operand
+  // ( ..) Capturing groups
+  // \1 Contents of group 1
+  // \2 Contents of group 2
+  //  (?: ... ) - Non-Capturing group
+
+  //                          ANCHORS AND BOUNDARIES
+
+  //  ^ - start of string
+  //  $ - end of string
+  //  \A - beginning of string
+  //  \z  - very end of string
+  //  \b - word boundary
+
+  //   NOTE:
+  // all regex should be encompassed in /  / matching slants
+  // refer to documentation for super specific use-cases, I used rexegg.com
+
+  const [errors, setErrors] = useState({});
+
+  const FormValidation = () => {
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    // regex --> "[^\s@]" or ensures something before @ symbol
+    //                  + 
+    //           "@[^\s@]" that ensures an @ in there, then ensure something after @ until a dot .
+    //                  +
+    //           "\.[^\s@]" a dot (any char in regex) then one or more char after dot, 
+    //                  +
+    //            then "$/" end of string 
+
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    // regex ensures at least 8 chars, 1 uppercase, 1 number, and 1 special character
+    
+
+    let newErrors = {};
+
+    if (!firstName.trim()) newErrors.firstName = "First name is required.";
+    if (!lastName.trim()) newErrors.lastName = "Last name is required.";
+    if (!username.trim()) newErrors.username = "Username is required.";
+    if (!emailRegex.test(email)) newErrors.email = "Enter a valid email address.";
+    if (!passwordRegex.test(password))
+      newErrors.password = "Password must be 8+ characters, contain 1 uppercase, 1 number, and 1 special character.";
+
+    setErrors(newErrors); // update the state with errors after^^ can't do individual
+    return Object.keys(newErrors).length === 0; // return true if no errors, move on to submit
+  };
+
   // form submission handler -> to be connected to backend
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (FormValidation()) { // temporary check to see if form submits without backend, REMOVE LATER
+      console.log("Form submitted successfully!");
+    }
+
     // TODO: Implement registration logic here
     // backend expects: { firstname, lastname, email, username, password }
     const newUser = {
@@ -81,7 +163,9 @@ const Register = () => {
         {/* right section with registration form */}
         <div className="right-section">
           <form onSubmit={handleSubmit}>
-            {/* first name input group with icon */}
+
+            {/* first name input group with icon, existing error above container */}
+            {errors.firstName && <p className="error-text">{errors.firstName}</p>} 
             <div className="input-group">
               <div className="icon-container">
                 <img src={personIcon} alt="First Name" />
@@ -94,7 +178,8 @@ const Register = () => {
               />
             </div>
 
-            {/* last name input group with icon */}
+            {/* last name input group with icon, existing error above container */}
+            {errors.lastName && <p className="error-text">{errors.lastName}</p>} 
             <div className="input-group">
               <div className="icon-container">
                 <img src={personIcon} alt="Last Name" />
@@ -107,7 +192,8 @@ const Register = () => {
               />
             </div>
 
-            {/* email input group with icon */}
+            {/* email input group with icon, existing error above container */}
+            {errors.email && <p className="error-text">{errors.email}</p>} 
             <div className="input-group">
               <div className="icon-container">
                 <img src={emailIcon} alt="Email" />
@@ -120,7 +206,8 @@ const Register = () => {
               />
             </div>
 
-            {/* username input group with icon */}
+            {/* username input group with icon, existing error above container */}
+            {errors.username && <p className="error-text">{errors.username}</p>} 
             <div className="input-group">
               <div className="icon-container">
                 <img src={islandIcon} alt="Username" />
@@ -133,7 +220,8 @@ const Register = () => {
               />
             </div>
 
-            {/* password input group with icon */}
+            {/* password input group with icon, existing error above container */}
+            {errors.password && <p className="error-text">{errors.password}</p>}
             <div className="input-group">
               <div className="icon-container">
                 <img src={islandIcon} alt="Password" />

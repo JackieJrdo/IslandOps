@@ -197,6 +197,11 @@ input:focus {
   text-decoration: underline;
 }
 
+.error-text {
+  color: #CC5723;
+  font-size: 0.9rem;
+}
+
 @media (max-width: 1200px) {
   .register-content {
     gap: 3rem;
