@@ -230,3 +230,42 @@ input:focus {
     padding: 1.5rem 2rem; /* Reduce nav padding */
   }
 }
+
+/* text input fields next to icons */
+input {
+  flex: 1;
+  padding: 1.2rem;
+  border: none;
+  background-color: #AFB191;
+  color: #ffffff;
+  font-family: 'Tourney', sans-serif;
+  font-size: 1.2rem;
+  font-weight: bolder;
+}
+
+/* error styling for input validation */
+.input-group {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.error {
+  border: 2px solid #CC5723;
+  background-color: #AFB191;
+}
+
+.error-message {
+  color: #CC5723;
+  font-size: 0.9rem;
+  padding-top: 0rem;
+  padding-left: 5rem;
+  
+  font-family: 'Roboto', sans-serif;
+}
+
+/* placeholder text in input fields */
+input::placeholder {
+  color: #dbdccf;
+  opacity: 1;
+  font-weight: bold;
+}
