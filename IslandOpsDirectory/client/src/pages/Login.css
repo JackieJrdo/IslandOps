@@ -230,3 +230,21 @@ input:focus {
     padding: 1.5rem 2rem; /* Reduce nav padding */
   }
 }
+
+/* text input fields next to icons */
+input {
+  flex: 1;
+  padding: 1.2rem;
+  border: none;
+  background-color: #AFB191;
+  color: #ffffff;
+  font-family: 'Tourney', sans-serif;
+  font-size: 1.2rem;
+  font-weight: bolder;
+}
+
+/* error styling for input validation */
+.error-text {
+  color: #CC5723;
+  font-size: 0.9rem;
+}

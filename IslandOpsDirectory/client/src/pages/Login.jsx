@@ -17,9 +17,32 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
+  const [errors, setErrors] = useState({});
+
+  const FormValidation = () => {
+
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    // regex ensures at least 8 chars, 1 uppercase, 1 number, and 1 special character
+
+
+    let newErrors = {};
+
+    if (!username.trim()) newErrors.username = "Username is required.";
+    if (!passwordRegex.test(password))
+      newErrors.password = "Password must be 8+ characters, contain 1 uppercase, 1 number, and 1 special character.";
+
+    setErrors(newErrors); // update the state with errors after^^ can't do individual
+    return Object.keys(newErrors).length === 0; // return true if no errors, move on to submit
+  };
+
   // form submission handler -> to be connected to backend
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (FormValidation()) { // temporary check to see if form submits without backend, REMOVE LATER
+      console.log("Form submitted successfully!");
+    }
+
     // TODO: Implement authentication logic here
     // backend expects: { username, password }
     try {
@@ -69,7 +92,8 @@ const Login = () => {
         {/* right section with login form */}
         <div className="right-section">
           <form onSubmit={handleSubmit}>
-            {/* username input group with icon */}
+            {/* username input group with icon, existing error above container */}
+            {errors.username && <p className="error-text">{errors.username}</p>}
             <div className="input-group">
               <div className="icon-container">
                 <img src={personIcon} alt="Username" />
@@ -82,7 +106,8 @@ const Login = () => {
               />
             </div>
 
-            {/* password input group with icon */}
+            {/* password input group with icon, existing error above container */}
+            {errors.password && <p className="error-text">{errors.password}</p>}
             <div className="input-group">
               <div className="icon-container">
                 <img src={lockIcon} alt="Password" />
