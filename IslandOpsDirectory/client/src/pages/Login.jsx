@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 // import assets for the login page
 import personIcon from '../assets/person.png';
 import lockIcon from '../assets/password.png';
@@ -13,6 +13,7 @@ import './Login.css';
  * backend expects username (not email) for login
  */
 const Login = () => {
+  const navigate = useNavigate();
   // state management for form inputs
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
