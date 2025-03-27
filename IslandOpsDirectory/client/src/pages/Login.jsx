@@ -48,9 +48,6 @@ const Login = () => {
     else {
       return;
     }
-
-    // TODO: Implement authentication logic here
-    // backend expects: { username, password }
     try {
       // post request to submit inputted username & password to backend
       const res = await fetch("http://localhost:5000/api/auth/login", {
