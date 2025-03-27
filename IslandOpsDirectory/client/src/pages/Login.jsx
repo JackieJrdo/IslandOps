@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 // import assets for the login page
 import personIcon from '../assets/person.png';
 import lockIcon from '../assets/password.png';
@@ -13,6 +13,7 @@ import './Login.css';
  * backend expects username (not email) for login
  */
 const Login = () => {
+  const navigate = useNavigate();
   // state management for form inputs
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -39,34 +40,29 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (FormValidation()) { // temporary check to see if form submits without backend, REMOVE LATER
-      console.log("Form submitted successfully!");
-    }
+    if (FormValidation()) {
+      try {
+        // post request to submit inputted username & password to backend
+        const res = await fetch("http://localhost:5000/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
 
-    // TODO: Implement authentication logic here
-    // backend expects: { username, password }
-    try {
-      // post request to submit inputted username & password to backend
-      const res = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
-      });
-
-      const data = await res.json();
-      // stores token on local storage so that token storage is persistent
-      if (res.ok) {
-        localStorage.setItem("token", data.token);
-        alert("Login successful!");
-      }
-      else {
-        alert("Login failed");
+        const data = await res.json();
+        // stores token on local storage so that token storage is persistent
+        if (res.ok) {
+          localStorage.setItem("token", data.token);
+          // Redirect to home page after successful login
+          navigate('/home');
+        } else {
+          alert("Login failed: " + (data.message || "Please check your credentials"));
+        }
+      } catch (err) {
+        console.error("Login error: ", err);
+        alert("There was an issue connecting to the server. Please try again.");
       }
     }
-    catch (err) {
-      console.error("Login error: ", err);
-      alert("There was an issue. Please try again.");
-    };
   };
 
   return (
