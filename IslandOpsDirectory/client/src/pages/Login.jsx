@@ -19,6 +19,8 @@ const Login = () => {
 
   const [errors, setErrors] = useState({});
 
+  const [serverError, setServerError] = useState('');
+
   const FormValidation = () => {
 
     const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
@@ -42,6 +44,9 @@ const Login = () => {
     if (FormValidation()) { // temporary check to see if form submits without backend, REMOVE LATER
       console.log("Form submitted successfully!");
     }
+    else {
+      return;
+    }
 
     // TODO: Implement authentication logic here
     // backend expects: { username, password }
@@ -58,14 +63,25 @@ const Login = () => {
       if (res.ok) {
         localStorage.setItem("token", data.token);
         alert("Login successful!");
+        setErrors({});
+        setServerError('');
       }
       else {
-        alert("Login failed");
+        if(data.error === "Invalid username.") {
+          setErrors({ username: data.error });
+        }
+        else if(data.error === "Invalid password.") {
+          setErrors({ password: data.error });
+        }
+        else {
+        setServerError(data.error || "Login failed");
+        }
+        //alert("Login failed");
       }
     }
     catch (err) {
       console.error("Login error: ", err);
-      alert("There was an issue. Please try again.");
+      setServerError("There was an issue. Please try again.");
     };
   };
 

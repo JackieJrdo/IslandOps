@@ -39,13 +39,13 @@ router.post('/login', async (req, res) => {
     const user = await findUsername(username);
     // if username doesn't exist, send error
     if (!user) {
-        return res.status(401).json({error: 'Invalid email or password. Try again.'});
+        return res.status(401).json({error: 'Invalid username.'});
     }
     // checks if inputted password is correct
     const is_valid_password = await bcrypt.compare(password, user.password);
     // send error if password is wrong
     if (!is_valid_password) {
-        return res.status(401).json({error: 'Invalid email or password. Try again.'});
+        return res.status(401).json({error: 'Invalid password.'});
     }
     // generates jwt for registered user
     const token = jwt.sign({userId: user.id}, JWT_SECRET, {expiresIn: '7d'});
