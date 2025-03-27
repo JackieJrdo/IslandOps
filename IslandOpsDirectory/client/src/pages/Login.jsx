@@ -20,6 +20,8 @@ const Login = () => {
 
   const [errors, setErrors] = useState({});
 
+  const [serverError, setServerError] = useState('');
+
   const FormValidation = () => {
 
     const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
@@ -40,29 +42,45 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (FormValidation()) {
-      try {
-        // post request to submit inputted username & password to backend
-        const res = await fetch("http://localhost:5000/api/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password })
-        });
+    if (FormValidation()) { // temporary check to see if form submits without backend, REMOVE LATER
+      console.log("Form submitted successfully!");
+    }
+    else {
+      return;
+    }
+    try {
+      // post request to submit inputted username & password to backend
+      const res = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
 
-        const data = await res.json();
-        // stores token on local storage so that token storage is persistent
-        if (res.ok) {
-          localStorage.setItem("token", data.token);
-          // Redirect to home page after successful login
-          navigate('/home');
-        } else {
-          alert("Login failed: " + (data.message || "Please check your credentials"));
+      const data = await res.json();
+      // stores token on local storage so that token storage is persistent
+      if (res.ok) {
+        localStorage.setItem("token", data.token);
+        alert("Login successful!");
+        setErrors({});
+        setServerError('');
+      }
+      else {
+        if(data.error === "Invalid username.") {
+          setErrors({ username: data.error });
         }
-      } catch (err) {
-        console.error("Login error: ", err);
-        alert("There was an issue connecting to the server. Please try again.");
+        else if(data.error === "Invalid password.") {
+          setErrors({ password: data.error });
+        }
+        else {
+        setServerError(data.error || "Login failed");
+        }
+        //alert("Login failed");
       }
     }
+    catch (err) {
+      console.error("Login error: ", err);
+      setServerError("There was an issue. Please try again.");
+    };
   };
 
   return (

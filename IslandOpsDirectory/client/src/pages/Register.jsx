@@ -106,6 +106,9 @@ const Register = () => {
     if (FormValidation()) { // temporary check to see if form submits without backend, REMOVE LATER
       console.log("Form submitted successfully!");
     }
+    else {
+      return;
+    }
 
     // TODO: Implement registration logic here
     // backend expects: { firstname, lastname, email, username, password }
