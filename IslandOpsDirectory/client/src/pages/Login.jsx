@@ -63,6 +63,7 @@ const Login = () => {
         alert("Login successful!");
         setErrors({});
         setServerError('');
+        navigate('/dashboard');
       }
       else {
         if(data.error === "Invalid username.") {

@@ -26,7 +26,7 @@ router.post('/register', async (req, res) => {
     // adds the new user into database
     const new_user = await createUser(username, email, hashed_password, firstname, lastname);
     // generates JWT for new user
-    const token = jwt.sign({userId: new_user.id}, JWT_SECRET, {expiresIn: '7d'});
+    const token = jwt.sign({user_id: new_user.id}, JWT_SECRET, {expiresIn: '7d'});
     // send message to frontend saying user registered successfully
     res.json({message: 'User registered successfully!', token});
 }
@@ -48,7 +48,7 @@ router.post('/login', async (req, res) => {
         return res.status(401).json({error: 'Invalid password.'});
     }
     // generates jwt for registered user
-    const token = jwt.sign({userId: user.id}, JWT_SECRET, {expiresIn: '7d'});
+    const token = jwt.sign({user_id: user.id}, JWT_SECRET, {expiresIn: '7d'});
     // send message to frontend saying login was successful
     res.json({ message: 'Login successful!', token });
 }
