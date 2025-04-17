@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const {createUser, findEmail, findUsername} = require('../models/User');
 const authenticateUser = require("../middleware/authMiddleware");
+const pool = require('../database');
 require('dotenv').config();
 
 const JWT_SECRET = process.env.JWT_SECRET;
