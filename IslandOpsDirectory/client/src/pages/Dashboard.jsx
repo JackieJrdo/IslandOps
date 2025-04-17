@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import axios from 'axios'; // for HTTP requests
 import bareIslandImage from '../assets/empty_island.png';
 import progressBar from '../assets/progress_bar.png';
 import sleepy from '../assets/sleepy_energy.png';
@@ -28,22 +29,50 @@ const Dashboard = () => {
   // this is a placeholder state for the kanban board (hardcoded for now)
   // task object requirements: id, title, description, difficulty, dueDate
   const [tasks, setTasks] = useState({
-    todo: [
-      {
-        id: '1',
-        title: 'Create kanban board',
-        description: 'Implement drag and drop functionality',
-        difficulty: 'Low',
-        dueDate: '3 Jun',
-        labels: ['Frontend', 'UI/UX']
-      }
-    ],
+    todo: []
+      // REMOVED THE FOLLOWING HARDCODED BLOCK TO GO BACK TO EMPTY FOR TESTING
+      
+      // {
+      //   id: '1',
+      //   title: 'Create kanban board',
+      //   description: 'Implement drag and drop functionality',
+      //   difficulty: 'Low',
+      //   dueDate: '3 Jun',
+      //   labels: ['Frontend', 'UI/UX']
+      // } 
+    ,
     inProgress: [],
     completed: []
   });
 
   // Energy levels: 1 = sleepy, 2 = meh, 3 = neutral, 4 = ready, 5 = energized
   const [energyLevel, setEnergyLevel] = useState(3);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchTasks = async () => { // TODO: Check if this connects and works with backend as intended
+    setLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(API_BASE_URL, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // organizes tasks by status
+      const grouped = { todo: [], inProgress: [], completed: [] };
+      response.data.forEach(task => {
+        if (task.status === 'todo') grouped.todo.push(task);
+        else if (task.status === 'inProgress') grouped.inProgress.push(task);
+        else if (task.status === 'completed') grouped.completed.push(task);
+      });
+      setTasks(grouped);
+    } catch (err) {
+      setError('Failed to load tasks');
+    }
+    setLoading(false);
+  };
+  
 
   const energyImages = {
     1: sleepy,    // very low energy
@@ -85,7 +114,7 @@ const Dashboard = () => {
   // 4. update energy status
   // 5. track island progress
 
-  const handleDragEnd = (result) => {
+  const handleDragEnd = async (result) => {
     const { source, destination } = result;
 
     // dropped outside a valid droppable area
@@ -98,35 +127,55 @@ const Dashboard = () => {
     ) return;
 
     // get source and destination lists
-    const sourceList = tasks[source.droppableId];
-    const destList = tasks[destination.droppableId];
 
-    // create copies of the lists
-    const newSourceList = Array.from(sourceList);
-    const newDestList = source.droppableId === destination.droppableId 
-      ? newSourceList 
-      : Array.from(destList);
+    // const sourceList = tasks[source.droppableId];
+    // const destList = tasks[destination.droppableId];
+  
+    // create copies of the lists 
+    // const newSourceList = Array.from(sourceList);
+    // const newDestList = source.droppableId === destination.droppableId 
+    //   ? newSourceList 
+    //   : Array.from(destList);
 
     // remove task from source list
-    const [movedTask] = newSourceList.splice(source.index, 1);
+    // const [movedTask] = newSourceList.splice(source.index, 1);
 
     // add task to destination list
-    if (source.droppableId === destination.droppableId) {
-      newSourceList.splice(destination.index, 0, movedTask);
-    } else {
-      newDestList.splice(destination.index, 0, movedTask);
-    }
+    // if (source.droppableId === destination.droppableId) {
+    //   newSourceList.splice(destination.index, 0, movedTask);
+    // } else {
+    //   newDestList.splice(destination.index, 0, movedTask);
+    // }
 
     // update state
-    setTasks({
-      ...tasks,
-      [source.droppableId]: newSourceList,
-      [destination.droppableId]: source.droppableId === destination.droppableId 
-        ? newSourceList 
-        : newDestList
-    });
+    // setTasks({
+    //   ...tasks,
+    //   [source.droppableId]: newSourceList,
+    //   [destination.droppableId]: source.droppableId === destination.droppableId 
+    //     ? newSourceList 
+    //     : newDestList
+    // });
 
-    // TODO: update task status in database
+    
+    try {
+      // FIRST get task data FROM ORIGINAL STATE
+      const movedTask = tasks[source.droppableId][source.index];
+      const updatedTask = { 
+        ...movedTask, 
+        status: destination.droppableId 
+      };
+      // THEN API call to update task in backend
+      const token = localStorage.getItem('token');
+      await axios.put(`${API_BASE_URL}/${movedTask.id}`, updatedTask, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // LAST refresh tasks from backend AFTER successful update
+      fetchTasks();
+    } catch (err) {
+      alert('Failed to update task status');
+      // Optional: Revert local state if desired
+    }
   };
 
   const handleLogout = () => {
@@ -134,14 +183,39 @@ const Dashboard = () => {
     navigate('/');
   };
 
-  const handleAddTask = (column) => {
+  const handleAddTask = async(column) => {
     // TODO: implement modal for new task creation
     // fields needed:
     // - title
     // - description
     // - due date (optional)
     // - difficulty (low, medium, hard)
-    console.log(`Adding task to ${column}`);
+
+    // console.log(`Adding task to ${column}`);
+
+    const title = window.prompt('Task title:');
+    if (!title) return;
+    const description = window.prompt('Description:');
+    const difficulty = window.prompt('Difficulty (Easy, Medium, Hard):', 'Easy');
+    const due_date = window.prompt('Due Date (YYYY-MM-DD):');
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(API_BASE_URL, {
+        title,
+        description,
+        completed: false,
+        status: column,
+        difficulty,
+        points: difficulty === 'Hard' ? 3 : difficulty === 'Medium' ? 2 : 1,
+        due_date
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchTasks();
+    } catch (err) {
+      alert('Failed to create task');
+    }
   };
 
   // render task card component
