@@ -14,7 +14,7 @@ function App() {
     <Router>
       <Routes>
         {/* temporarily setting dashboard as default route */}
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={<Dashboard />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
