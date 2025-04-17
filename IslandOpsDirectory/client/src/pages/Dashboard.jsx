@@ -12,6 +12,8 @@ import excited from '../assets/energized_energy.png';
 import profileIcon from '../assets/profile_icon.png';
 import './Dashboard.css';
 
+const API_BASE_URL = "http://localhost:5000/api/tasks";
+
 // TODO: Import your images and icons:
 // - Profile icon for nav bar
 // - Stick figure notification icon
@@ -68,7 +70,9 @@ const Dashboard = () => {
       });
       setTasks(grouped);
     } catch (err) {
+      console.error(err.response?.data || err.message || err);
       setError('Failed to load tasks');
+
     }
     setLoading(false);
   };
@@ -162,7 +166,8 @@ const Dashboard = () => {
       const movedTask = tasks[source.droppableId][source.index];
       const updatedTask = { 
         ...movedTask, 
-        status: destination.droppableId 
+        status: destination.droppableId,
+        completed: destination.droppableId === 'completed' 
       };
       // THEN API call to update task in backend
       const token = localStorage.getItem('token');
@@ -207,7 +212,7 @@ const Dashboard = () => {
         completed: false,
         status: column,
         difficulty,
-        points: difficulty === 'Hard' ? 3 : difficulty === 'Medium' ? 2 : 1,
+        points: difficulty === 'Hard' ? 5 : difficulty === 'Medium' ? 3 : 1,
         due_date
       }, {
         headers: { Authorization: `Bearer ${token}` }

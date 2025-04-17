@@ -9,6 +9,10 @@ const pool = require('../database');
 require('dotenv').config();
 
 const JWT_SECRET = process.env.JWT_SECRET;
+
+console.log("taskRoutes loaded");
+
+
 // route to create a new task
 router.post('/', authenticateUser, async (req, res) => {
     const { title, description, completed, status, difficulty, points, due_date } = req.body;
@@ -20,7 +24,7 @@ router.post('/', authenticateUser, async (req, res) => {
         res.status(201).json(new_task);
     }
     catch (err) {
-        console.error(err);
+        console.error("Error in creating task:", err.message || err);
         // sends error message to client
         res.status(500).json({ error: 'Failed to create task.' });
     }
@@ -57,7 +61,7 @@ router.put('/:id', authenticateUser, async (req, res) => {
             return res.status(401).json({ error: 'Task not found.' });
         }
         // logic for updating points and level if a task is completed
-        if (updates.completed === true && !result.completed) {
+        if (updates.completed === true) {
             await updateIslandProgress(user_id, result.difficulty);
         }
 
@@ -88,7 +92,7 @@ router.delete('/:id', authenticateUser, async (req, res) => {
     catch (err) {
         console.error(err);
         // sends error message to client
-        res.status(500).json({ error: 'Failed to delete task.' });
+        res.status(501).json({ error: 'Failed to delete task.' });
     }
 });
 
