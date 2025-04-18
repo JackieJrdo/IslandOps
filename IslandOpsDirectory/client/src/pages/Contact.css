@@ -1,0 +1,170 @@
+@import url('https://fonts.googleapis.com/css2?family=Tourney:wght@400;600&family=Roboto:wght@400;500&display=swap');
+
+/* default margins and padding */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* main container styling used to set up the page layout */
+.contact-container {
+  min-height: 100vh;
+  width: 100vw;
+  background-color: #CED0B4;
+  font-family: 'Roboto', sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* styling for the navigation bar */
+.nav-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 4rem;
+  width: 100%;
+}
+
+/* styling for the logo in the navigation bar */
+.logo {
+  font-size: 1.5rem;
+  color: #68472C;
+  font-weight: 500;
+}
+
+/* container for navigation bar links */
+.nav-links {
+  display: flex;
+  gap: 2rem;
+}
+
+/* styling for the individual navigation links */
+.nav-links a {
+  color: #68472C;
+  text-decoration: none;
+  font-size: 1rem;
+}
+
+/* main content area that is split into a left and right section */
+.contact-content {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 4rem;
+  gap: 4rem;
+  flex: 1;
+  align-items: center;
+  max-width: 2000px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* left section containing welcome text and image */
+.left-section {
+  flex: 1.2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 0;
+  margin-left: 5rem;
+  margin-bottom: 3rem;
+}
+
+/* styling for the main "contact us." heading */
+.welcome-text {
+  font-family: 'Tourney', sans-serif;
+  font-size: 5rem;
+  color: #68472C;
+  margin-bottom: 0.5rem;
+  line-height: 1;
+  align-self: flex-start;
+  margin-left: 5rem;
+  font-weight: bold;
+}
+
+/* subheading styling for "we're here to help" */
+.contact-text {
+  font-size: 2rem;
+  color: #68472C;
+  margin-bottom: 3rem;
+  align-self: flex-start;
+  margin-left: 5rem;
+}
+
+/* island image styling */
+.island-image {
+  max-width: 150%;
+  height: auto;
+  margin-top: -2rem;
+  align-self: center;
+}
+
+/* Right section containing contact information */
+.right-section {
+  flex: 1;
+  padding: 2rem;
+}
+
+/* card containing contact information */
+.contact-info {
+  background-color: #AFB191;
+  padding: 2rem;
+  border-radius: 12px;
+  color: #ffffff;
+}
+
+/* main heading within the contact info card */
+.contact-info h2 {
+  font-family: 'Tourney', sans-serif;
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #68472C;
+}
+
+/* paragraph directly after h2 */
+.contact-info h2 + p {
+  margin-bottom: 2rem;
+  font-size: 1.5rem;
+}
+
+/* individual sections within contact info */
+.info-section {
+  margin-bottom: 1.5rem;
+}
+
+/* styling for subheadings within info sections */
+.info-section h3 {
+  font-family: 'Tourney', sans-serif;
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  color: #68472C;
+}
+
+/* styling for paragraphs within each info section */
+.info-section p {
+  margin-bottom: 0.3rem;
+  font-size: 1.1rem;
+}
+
+
+@media (max-width: 1200px) {
+  .contact-content {
+    gap: 4rem;
+  }
+
+  .welcome-text {
+    font-size: 3.5rem;
+  }
+}
+
+/* for screens under 1024px */
+@media (max-width: 1024px) {
+  .contact-content {
+    padding: 2rem;
+    gap: 2rem;
+  }
+  
+  .nav-bar {
+    padding: 1.5rem 2rem;
+  }
+}
