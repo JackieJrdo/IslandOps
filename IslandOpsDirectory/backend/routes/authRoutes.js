@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const {createUser, findEmail, findUsername} = require('../models/User');
 const authenticateUser = require("../middleware/authMiddleware");
+const pool = require('../database');
 require('dotenv').config();
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -25,6 +26,11 @@ router.post('/register', async (req, res) => {
     const hashed_password = await bcrypt.hash(password, 10);
     // adds the new user into database
     const new_user = await createUser(username, email, hashed_password, firstname, lastname);
+    // creates default progress tracker
+    await pool.query(`
+        INSERT INTO progress_tracking (user_id, level, points)
+        VALUES ($1, 1, 0)
+      `, [new_user.id]);
     // generates JWT for new user
     const token = jwt.sign({user_id: new_user.id}, JWT_SECRET, {expiresIn: '7d'});
     // send message to frontend saying user registered successfully
