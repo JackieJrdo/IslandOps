@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import Modal from 'react-modal';
 import axios from 'axios'; // for HTTP requests
 import bareIslandImage from '../assets/empty_island.png';
 import progressBar from '../assets/progress_bar.png';
@@ -28,23 +29,20 @@ const Dashboard = () => {
   const navigate = useNavigate();
   
   // TODO: replace with database fetch
-  // this is a placeholder state for the kanban board (hardcoded for now)
   // task object requirements: id, title, description, difficulty, dueDate
   const [tasks, setTasks] = useState({
-    todo: []
-      // REMOVED THE FOLLOWING HARDCODED BLOCK TO GO BACK TO EMPTY FOR TESTING
-      
-      // {
-      //   id: '1',
-      //   title: 'Create kanban board',
-      //   description: 'Implement drag and drop functionality',
-      //   difficulty: 'Low',
-      //   dueDate: '3 Jun',
-      //   labels: ['Frontend', 'UI/UX']
-      // } 
-    ,
+    todo: [],
     inProgress: [],
     completed: []
+  });
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalColumn, setModalColumn] = useState(null);
+  const [modalForm, setModalForm] = useState({
+  title: '',
+  description: '',
+  difficulty: 'Easy',
+  due_date: ''
   });
 
   // Energy levels: 1 = sleepy, 2 = meh, 3 = neutral, 4 = ready, 5 = energized
@@ -188,42 +186,87 @@ const Dashboard = () => {
     navigate('/');
   };
 
-  const handleAddTask = async(column) => {
-    // TODO: implement modal for new task creation
-    // fields needed:
-    // - title
-    // - description
-    // - due date (optional)
-    // - difficulty (low, medium, hard)
+  // const handleAddTask = async(column) => {
+  //   // TODO: implement modal for new task creation
+  //   // fields needed:
+  //   // - title
+  //   // - description
+  //   // - due date (optional)
+  //   // - difficulty (low, medium, hard)
 
-    // console.log(`Adding task to ${column}`);
+  //   // console.log(`Adding task to ${column}`);
 
-    const title = window.prompt('Task title:');
-    if (!title) return;
-    const description = window.prompt('Description:');
-    const difficulty = window.prompt('Difficulty (Easy, Medium, Hard):', 'Easy');
-    const due_date = window.prompt('Due Date (YYYY-MM-DD):');
+  //   const title = window.prompt('Task title:');
+  //   if (!title) return;
+  //   const description = window.prompt('Description:');
+  //   const difficulty = window.prompt('Difficulty (Easy, Medium, Hard):', 'Easy');
+  //   const due_date = window.prompt('Due Date (YYYY-MM-DD):');
 
+  //   try {
+  //     const token = localStorage.getItem('token');
+  //     await axios.post(API_BASE_URL, {
+  //       title,
+  //       description,
+  //       completed: false,
+  //       status: column,
+  //       difficulty,
+  //       points: difficulty === 'Hard' ? 5 : difficulty === 'Medium' ? 3 : 1,
+  //       due_date
+  //     }, {
+  //       headers: { Authorization: `Bearer ${token}` }
+  //     });
+  //     fetchTasks();
+  //   } catch (err) {
+  //     alert('Failed to create task');
+  //   }
+  // };
+
+  const [selectedTask, setSelectedTask] = useState(null);
+
+  const handleTaskSubmit = async (taskData) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.post(API_BASE_URL, {
-        title,
-        description,
-        completed: false,
-        status: column,
-        difficulty,
-        points: difficulty === 'Hard' ? 5 : difficulty === 'Medium' ? 3 : 1,
-        due_date
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      
+      if (selectedTask) { // edit only available if task exists
+        await axios.put(`${API_BASE_URL}/${selectedTask.id}`, {
+          ...selectedTask,
+          ...taskData
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } else { // logic for handleTaskAdd
+        await axios.post(API_BASE_URL, {
+          ...taskData,
+          completed: false,
+          points: taskData.difficulty === 'Hard' ? 5 : 
+                taskData.difficulty === 'Medium' ? 3 : 1
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+      
       fetchTasks();
+      setSelectedTask(null);
     } catch (err) {
-      alert('Failed to create task');
+      alert(selectedTask ? 'Failed to update task' : 'Failed to create task');
     }
   };
 
-  // render task card component
+  const handleDeleteTask = async (taskId) => {
+    if (!window.confirm('Are you sure you want to delete this task?')) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API_BASE_URL}/${taskId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchTasks(); // need to refresh the tasks list after deletion
+    } catch (err) {
+      alert('Failed to delete task');
+    }
+  };
+
+  // rendering task card component
   const TaskCard = ({ task, index }) => (
     <Draggable draggableId={task.id.toString()} index={index}>
       {(provided, snapshot) => (
@@ -234,6 +277,41 @@ const Dashboard = () => {
           className={`task-card ${snapshot.isDragging ? 'dragging' : ''}`}
         >
           <span className="task-difficulty">{task.difficulty}</span>
+          <button
+            onClick={() => {
+              setSelectedTask(null); // make sure we're in add mode
+              setModalColumn(id);
+              setModalForm({
+                title: '',
+                description: '',
+                difficulty: 'Easy',
+                due_date: ''
+              });
+              setIsModalOpen(true);
+            }}
+            className="add-task-btn"
+          >+ New Task</button>
+          <button
+            className="edit-task-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedTask(task);
+              setModalColumn(task.status); // use the task's current column/status
+              setModalForm({
+                title: task.title,
+                description: task.description,
+                difficulty: task.difficulty,
+                due_date: task.due_date || ''
+              });
+              setIsModalOpen(true);
+            }}
+          >✎</button>
+          <button 
+            className="delete-task-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteTask(task.id);
+            }}>×</button>
           <p className="task-title">{task.title}</p>
           <p className="task-description">{task.description}</p>
           {task.labels && task.labels.length > 0 && (
@@ -256,7 +334,21 @@ const Dashboard = () => {
     <div className="kanban-column">
       <div className="column-header">
         <h2>{title}</h2>
-        <button onClick={() => handleAddTask(id)} className="add-task-btn">+ New Task</button>
+        {/* THIS WAS REPLACED:  <button onClick={() => handleAddTask(id)} className="add-task-btn">+ New Task</button> */}
+        <button
+          onClick={() => {
+            setSelectedTask(null);
+            setModalColumn(id);
+            setModalForm({
+              title: '',
+              description: '',
+              difficulty: 'Easy', // right now Easy shows up as the default
+              due_date: ''
+            });
+            setIsModalOpen(true);
+          }}
+          className="add-task-btn"
+        >+ New Task</button>
       </div>
       <Droppable droppableId={id}>
         {(provided, snapshot) => (
@@ -337,6 +429,75 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+      <Modal
+      isOpen={isModalOpen}
+      onRequestClose={() => setIsModalOpen(false)}
+      contentLabel={selectedTask ? "Edit Task" : "Add Task"}
+      className="task-modal"
+      overlayClassName="task-modal-overlay"
+      ariaHideApp={false}
+    >
+      {/* heading depends on which action youre doing ^ in line 447 above this */}
+      <h2>{selectedTask ? "Edit Task" : "Add Task"}</h2> 
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          // lets you fill out data in the form
+          const taskData = {
+            ...modalForm,
+            status: modalColumn
+          };
+          await handleTaskSubmit(taskData); // your existing function
+          setIsModalOpen(false);
+        }}
+        className="task-form"
+      >
+        <label>
+          Title:
+          <input
+            type="text"
+            className='modal-title'
+            value={modalForm.title}
+            onChange={e => setModalForm({ ...modalForm, title: e.target.value })}
+            required
+          />
+        </label>
+        <label>
+          Description:
+          <textarea
+            value={modalForm.description}
+            onChange={e => setModalForm({ ...modalForm, description: e.target.value })}
+          />
+        </label>
+        <label>
+          Difficulty:
+          <select
+            value={modalForm.difficulty}
+            onChange={e => setModalForm({ ...modalForm, difficulty: e.target.value })}
+          >
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
+          </select>
+        </label>
+        <label>
+          Due Date:
+          <input
+            type="date"
+            value={modalForm.due_date}
+            onChange={e => setModalForm({ ...modalForm, due_date: e.target.value })}
+          />
+        </label>
+        <div style={{ marginTop: '1rem' }}>
+          <button type="submit" className="submit-btn">
+            {selectedTask ? "Update Task" : "Add Task"}
+          </button>
+          <button type="button" onClick={() => setIsModalOpen(false)} className="cancel-btn">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </Modal>
     </div>
   );
 };

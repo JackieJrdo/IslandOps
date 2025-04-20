@@ -135,6 +135,51 @@
   cursor: pointer;
 }
 
+/* all of these buttons have the same color and then a lighter version of the orange as the hover */
+.add-task-btn:hover {
+  background: #ff874f;
+}
+
+.edit-task-btn {
+  background: #E5DCC3;
+  color: #CC5723;
+  font-weight: 600;
+  margin-left: 0.3em;
+}
+.edit-task-btn:hover {
+  background: #ff874f;
+}
+
+.delete-task-btn {
+  background: #CC5723;
+  color: #fff;
+  font-weight: 600;
+  margin-left: 0.3em;
+}
+.delete-task-btn:hover {
+  background: #ff874f;
+}
+
+/* modal button styling */
+.submit-btn {
+  background: #CC5723;
+  color: #fff;
+  font-weight: 600;
+}
+.submit-btn:hover {
+  background: #ff874f;
+}
+
+.cancel-btn {
+  background: #ccc;
+  color: #535353;
+  font-weight: 600;
+  margin-left: 0.5em;
+}
+.cancel-btn:hover {
+  background: #b0b0b0;
+}
+
 .tasks-container {
   display: flex;
   flex-direction: column;
@@ -192,6 +237,40 @@
   gap: 0.5rem;
   flex-wrap: wrap;
   margin-bottom: 1rem;
+}
+
+/* this makes it so when youre in the modal, everything behing it goes a little gray */
+.task-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5); 
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* the whole modal box */
+.task-modal {
+  background: #E5DCC3;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  max-width: 400px;
+  width: 90%;
+  padding: 2rem;
+  position: relative;
+  z-index: 1001;
+  animation: fadeIn 0.2s;
+}
+
+/* this is just the main heading for the modal */
+.task-modal h2 {
+  color: #333;
+}
+
+/* this is for the text labels like 'description' and 'due date' */
+.task-form {
+  color: #333;
 }
 
 .label {
