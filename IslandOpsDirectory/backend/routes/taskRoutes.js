@@ -96,4 +96,65 @@ router.delete('/:id', authenticateUser, async (req, res) => {
     }
 });
 
+
+router.get('/sorted-by-energy/:energy', authenticateUser, async (req, res) => {
+    // get the user_id of the user logged in and their current energy level
+    const user_id = req.user.user_id;
+    const energy = parseInt(req.params.energy);
+
+    let difficultyOrder;
+    // determine task sorting order based off of energy level
+    // for users who are the two lowest energy levels
+    if (energy <= 2) {
+        difficultyOrder = ['Easy', 'Medium', 'Hard'];
+    }
+    // for users who are in the middle
+    else if (energy === 3) {
+        difficultyOrder = ['Medium', 'Easy', 'Hard'];
+    }
+    // for users who are the two highest energy levels
+    else {
+        difficultyOrder = ['Hard', 'Medium', 'Easy'];
+    }
+
+    try {
+       // SQL query to pull from the database in the order of task difficulty based on the user's energy level
+        const result = await pool.query(`
+            SELECT * FROM "task"
+            WHERE User_id = $1 AND completed = false
+            ORDER BY
+                CASE difficulty
+                    WHEN $2 THEN 1
+                    WHEN $3 THEN 2
+                    WHEN $4 THEN 3
+                END
+            `, [user_id, ...difficultyOrder]);
+
+        res.json(result.rows);
+    }
+    catch (err) {
+        console.error(err);
+        // if error, send error message to client
+        res.status(500).json({ error: 'Failed to fetch energy-based sorted tasks' });
+    }
+});
+
+
+router.get('/sorted-by-date', authenticateUser, async (req, res) => {
+    const user_id = req.user.user_id;
+
+    try {
+        const result = await pool.query(`
+            SELECT * FROM "task"
+            WHERE user_id = $1 AND completed = false
+            ORDER BY due_date ASC
+            `, [user_id]);
+        res.json(result.rows);
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch tasks by due date' });
+    }
+});
+
 module.exports = router;
