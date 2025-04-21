@@ -114,7 +114,7 @@ const PomodoroTimer = () => {
             </div>
           </div>
           <div className="length-control">
-            <p>Session Length</p>
+            <p>Work Length</p>
             <div className="control-buttons">
               <button onClick={() => handleSessionChange(-1)}>-</button>
               <span>{sessionLength}</span>
