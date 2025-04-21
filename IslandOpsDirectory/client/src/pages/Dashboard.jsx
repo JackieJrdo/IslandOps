@@ -13,63 +13,63 @@ import excited from '../assets/energized_energy.png';
 import profileIcon from '../assets/profile_icon.png';
 import './Dashboard.css';
 import PomodoroTimer from '../components/PomodoroTimer';
+import SortToggle from '../components/SortToggle';
 import easyDifficulty from '../assets/easy_difficulty.png';
 import mediumDifficulty from '../assets/medium_difficulty.png';
 import hardDifficulty from '../assets/hard_difficulty.png';
 
-// base url for task api endpoints
+// where we talk to the backend
 const API_BASE_URL = "http://localhost:5000/api/tasks";
 
 // main dashboard component with kanban board and task management
 const Dashboard = () => {
   const navigate = useNavigate();
   
-  // state for tasks organized by status
-  const [tasks, setTasks] = useState({
-    todo: [],
-    inProgress: [],
-    completed: []
-  });
-
-  // state for task modal
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalColumn, setModalColumn] = useState(null);
-  const [modalForm, setModalForm] = useState({
+  // all the states we need
+  const [tasks, setTasks] = useState({ todo: [], inProgress: [], completed: [] }); // keeps track of all our tasks
+  const [isModalOpen, setIsModalOpen] = useState(false);  // for the add/edit task popup
+  const [modalColumn, setModalColumn] = useState(null);   // which column we're adding to
+  const [modalForm, setModalForm] = useState({           // info for the new/edited task
     title: '',
     description: '',
     difficulty: 'Easy',
     due_date: ''
   });
+  const [energyLevel, setEnergyLevel] = useState(3);     // how energized you're feeling (1-5)
+  const [loading, setLoading] = useState(true);          // shows loading spinner
+  const [error, setError] = useState(null);              // shows error messages
+  const [islandProgress, setIslandProgress] = useState(0); // how complete your island is
+  const [isEnergyExpanded, setIsEnergyExpanded] = useState(false); // energy picker open/closed
+  const [isEnergySort, setIsEnergySort] = useState(false); // whether we're sorting by energy
+  const [selectedTask, setSelectedTask] = useState(null);   // task being edited
 
-  // state for energy level (1-5)
-  const [energyLevel, setEnergyLevel] = useState(3);
-
-  // state for loading and error handling
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // state for island progress tracking
-  const [islandProgress, setIslandProgress] = useState(0);
-
-  // state for energy status dropdown
-  const [isEnergyExpanded, setIsEnergyExpanded] = useState(false);
-
-  // fetch tasks from backend and organize by status
+  // get tasks from backend based on sort type
   const fetchTasks = async () => {
     setLoading(true);
     setError(null);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(API_BASE_URL, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      // organize tasks by status
+      let response;
+      
+      // pick which sorting endpoint to use
+      if (isEnergySort) {
+        response = await axios.get(`${API_BASE_URL}/sorted-by-energy/${energyLevel}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } else {
+        response = await axios.get(`${API_BASE_URL}/sorted-by-date`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+
+      // split tasks into their columns
       const grouped = { todo: [], inProgress: [], completed: [] };
       response.data.forEach(task => {
         if (task.status === 'todo') grouped.todo.push(task);
         else if (task.status === 'inProgress') grouped.inProgress.push(task);
         else if (task.status === 'completed') grouped.completed.push(task);
       });
+      
       setTasks(grouped);
     } catch (err) {
       console.error(err.response?.data || err.message || err);
@@ -78,13 +78,13 @@ const Dashboard = () => {
     setLoading(false);
   };
 
-  // energy level images and labels
+  // energy stuff
   const energyImages = {
-    1: sleepy,    // sleepy
-    2: sad,       // meh
-    3: neutral,   // neutral
-    4: happy,     // ready
-    5: excited    // energized
+    1: sleepy,    // totally exhausted
+    2: sad,       // kinda tired
+    3: neutral,   // okay energy
+    4: happy,     // pretty energized
+    5: excited    // super energized
   };
 
   const energyLabels = {
@@ -97,73 +97,84 @@ const Dashboard = () => {
 
   const currentEnergy = energyImages[energyLevel];
 
-  // handle energy level change
+  // what happens when energy changes
   const handleEnergyChange = (newLevel) => {
     setEnergyLevel(newLevel);
-    setIsEnergyExpanded(false);
+    setIsEnergyExpanded(false);  // close the energy picker
   };
 
-  // toggle energy status dropdown
   const toggleEnergyStatus = () => {
-    setIsEnergyExpanded(!isEnergyExpanded);
+    setIsEnergyExpanded(!isEnergyExpanded);  // open/close energy picker
   };
 
-  // check if user is authenticated
+  const handleSortToggle = () => {
+    setIsEnergySort(!isEnergySort);  // switch between date and energy sorting
+    fetchTasks();  // get tasks with new sorting
+  };
+
+  // check if user is logged in
   React.useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      navigate('/');
+      navigate('/');  // go back to login if not logged in
     }
   }, [navigate]);
 
-  // fetch tasks on component mount
+  // get tasks when page loads
   React.useEffect(() => {
     fetchTasks();
   }, []);
 
-  // calculate points for task difficulty
+  // get tasks again if energy changes while sorting by energy
+  React.useEffect(() => {
+    if (isEnergySort) {
+      fetchTasks();  // resort tasks when energy changes
+    }
+  }, [energyLevel]);
+
+  // figure out points for island progress
   const getTaskPoints = (difficulty) => {
     switch(difficulty.toLowerCase()) {
-      case 'hard': return 3;
-      case 'medium': return 2;
-      case 'easy': return 1;
+      case 'hard': return 3;    // hard tasks worth 3 points
+      case 'medium': return 2;  // medium tasks worth 2 points
+      case 'easy': return 1;    // easy tasks worth 1 point
       default: return 1;
     }
   };
 
-  // calculate total possible points from all tasks
+  // add up all possible points from all tasks
   const calculateTotalPossiblePoints = () => {
     const allTasks = [...tasks.todo, ...tasks.inProgress, ...tasks.completed];
     return allTasks.reduce((total, task) => total + getTaskPoints(task.difficulty), 0);
   };
 
-  // calculate points from completed tasks
+  // add up points from completed tasks
   const calculateCurrentPoints = () => {
     return tasks.completed.reduce((total, task) => total + getTaskPoints(task.difficulty), 0);
   };
 
-  // update island progress when tasks change
+  // update the island progress bar
   React.useEffect(() => {
     const totalPossiblePoints = calculateTotalPossiblePoints();
     const currentPoints = calculateCurrentPoints();
-    
-    const progress = totalPossiblePoints > 0 
-      ? (currentPoints / totalPossiblePoints) * 100 
-      : 0;
-    
+    // turn points into a percentage
+    const progress = totalPossiblePoints > 0 ? (currentPoints / totalPossiblePoints) * 100 : 0;
     setIslandProgress(progress);
   }, [tasks]);
 
-  // handle task drag and drop
+  // handle moving tasks around
   const handleDragEnd = async (result) => {
     const { source, destination } = result;
 
-    // check if drop is valid
-    if (!destination) return;
-    if (destination.droppableId === source.droppableId && destination.index === source.index) return;
+    // make sure the drop was valid
+    if (!destination || 
+        (destination.droppableId === source.droppableId && 
+         destination.index === source.index)) {
+      return;
+    }
     
     try {
-      // get task data and update status
+      // update the task's status in our state
       const movedTask = tasks[source.droppableId][source.index];
       const updatedTask = { 
         ...movedTask, 
@@ -171,26 +182,26 @@ const Dashboard = () => {
         completed: destination.droppableId === 'completed' 
       };
       
-      // update task in backend
+      // save the change to the backend
       const token = localStorage.getItem('token');
       await axios.put(`${API_BASE_URL}/${movedTask.id}`, updatedTask, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // refresh tasks after update
+      // get fresh task list
       fetchTasks();
     } catch (err) {
       alert('Failed to update task status');
     }
   };
 
-  // handle user logout
+  // log out the user
   const handleLogout = () => {
     localStorage.removeItem('token');
-    navigate('/');
+    navigate('/');  // go back to login page
   };
 
-  // handle task submission (create or update)
+  // save a new task or update existing one
   const handleTaskSubmit = async (taskData) => {
     try {
       const token = localStorage.getItem('token');
@@ -209,20 +220,20 @@ const Dashboard = () => {
           ...taskData,
           completed: false,
           points: taskData.difficulty === 'Hard' ? 5 : 
-                taskData.difficulty === 'Medium' ? 3 : 1
+                  taskData.difficulty === 'Medium' ? 3 : 1
         }, {
           headers: { Authorization: `Bearer ${token}` }
         });
       }
       
-      fetchTasks();
-      setSelectedTask(null);
+      fetchTasks();  // refresh task list
+      setSelectedTask(null);  // clear selected task
     } catch (err) {
       alert(selectedTask ? 'Failed to update task' : 'Failed to create task');
     }
   };
 
-  // handle task deletion
+  // delete a task after confirming
   const handleDeleteTask = async (taskId) => {
     if (!window.confirm('Are you sure you want to delete this task?')) return;
     
@@ -231,13 +242,13 @@ const Dashboard = () => {
       await axios.delete(`${API_BASE_URL}/${taskId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      fetchTasks();
+      fetchTasks();  // refresh task list
     } catch (err) {
       alert('Failed to delete task');
     }
   };
 
-  // task card component
+  // the components that make up the page
   const TaskCard = ({ task, index }) => (
     <Draggable draggableId={task.id.toString()} index={index}>
       {(provided, snapshot) => (
@@ -300,7 +311,6 @@ const Dashboard = () => {
     </Draggable>
   );
 
-  // kanban column component
   const Column = ({ title, tasks, id }) => (
     <div className="kanban-column">
       <div className="column-header">
@@ -337,8 +347,6 @@ const Dashboard = () => {
     </div>
   );
 
-  const [selectedTask, setSelectedTask] = useState(null);
-
   return (
     <div className="dashboard-container">
       <nav className="nav-bar">
@@ -357,11 +365,12 @@ const Dashboard = () => {
         <div className="left-section">
           <div className="welcome-section">
             <h1 className="welcome-text">welcome back izzy.</h1>
+            <SortToggle isEnergySort={isEnergySort} onToggle={handleSortToggle} />
             <div className="notifications-box">
               <h2>NOTIFICATIONS:</h2>
               <ul>
                 <li>Don't forget to update your energy status!</li>
-                <li>Flip the toggle if you want your tasks organized by due date or energy status!</li>
+                <li>Toggle between due date and energy-based sorting!</li>
               </ul>
               {/* TODO: Add stick-figure.png in bottom right */}
             </div>
@@ -436,101 +445,99 @@ const Dashboard = () => {
         </div>
       </div>
       <Modal
-      isOpen={isModalOpen}
-      onRequestClose={() => setIsModalOpen(false)}
-      contentLabel={selectedTask ? "Edit Task" : "Add Task"}
-      className="task-modal"
-      overlayClassName="task-modal-overlay"
-      ariaHideApp={false}
-    >
-      {/* heading depends on which action youre doing ^ in line 447 above this */}
-      <h2>{selectedTask ? "Edit Task" : "Add Task"}</h2> 
-      <form
-        onSubmit={async (e) => {
-          e.preventDefault();
-          // lets you fill out data in the form
-          const taskData = {
-            ...modalForm,
-            status: modalColumn
-          };
-          await handleTaskSubmit(taskData); // your existing function
-          setIsModalOpen(false);
-        }}
-        className="task-form"
+        isOpen={isModalOpen}
+        onRequestClose={() => setIsModalOpen(false)}
+        contentLabel={selectedTask ? "Edit Task" : "Add Task"}
+        className="task-modal"
+        overlayClassName="task-modal-overlay"
+        ariaHideApp={false}
       >
-        <label>
-          Title:
-          <input
-            type="text"
-            className='modal-title'
-            value={modalForm.title}
-            onChange={e => setModalForm({ ...modalForm, title: e.target.value })}
-            required
-          />
-        </label>
-        <label>
-          Description:
-          <textarea
-            value={modalForm.description}
-            onChange={e => setModalForm({ ...modalForm, description: e.target.value })}
-          />
-        </label>
-        <label>
-          Difficulty:
-          <div className="difficulty-options">
-            <div 
-              className={`difficulty-option ${modalForm.difficulty === 'Easy' ? 'selected' : ''}`}
-              onClick={() => setModalForm({ ...modalForm, difficulty: 'Easy' })}
-            >
-              <img 
-                src={easyDifficulty} 
-                alt="Easy" 
-                className="difficulty-icon"
-              />
-              <span className="difficulty-label">Easy</span>
+        <h2>{selectedTask ? "Edit Task" : "Add Task"}</h2>
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const taskData = {
+              ...modalForm,
+              status: modalColumn
+            };
+            await handleTaskSubmit(taskData);
+            setIsModalOpen(false);
+          }}
+          className="task-form"
+        >
+          <label>
+            Title:
+            <input
+              type="text"
+              className='modal-title'
+              value={modalForm.title}
+              onChange={e => setModalForm({ ...modalForm, title: e.target.value })}
+              required
+            />
+          </label>
+          <label>
+            Description:
+            <textarea
+              value={modalForm.description}
+              onChange={e => setModalForm({ ...modalForm, description: e.target.value })}
+            />
+          </label>
+          <label>
+            Difficulty:
+            <div className="difficulty-options">
+              <div 
+                className={`difficulty-option ${modalForm.difficulty === 'Easy' ? 'selected' : ''}`}
+                onClick={() => setModalForm({ ...modalForm, difficulty: 'Easy' })}
+              >
+                <img 
+                  src={easyDifficulty} 
+                  alt="Easy" 
+                  className="difficulty-icon"
+                />
+                <span className="difficulty-label">Easy</span>
+              </div>
+              <div 
+                className={`difficulty-option ${modalForm.difficulty === 'Medium' ? 'selected' : ''}`}
+                onClick={() => setModalForm({ ...modalForm, difficulty: 'Medium' })}
+              >
+                <img 
+                  src={mediumDifficulty} 
+                  alt="Medium" 
+                  className="difficulty-icon"
+                />
+                <span className="difficulty-label">Medium</span>
+              </div>
+              <div 
+                className={`difficulty-option ${modalForm.difficulty === 'Hard' ? 'selected' : ''}`}
+                onClick={() => setModalForm({ ...modalForm, difficulty: 'Hard' })}
+              >
+                <img 
+                  src={hardDifficulty} 
+                  alt="Hard" 
+                  className="difficulty-icon"
+                />
+                <span className="difficulty-label">Hard</span>
+              </div>
             </div>
-            <div 
-              className={`difficulty-option ${modalForm.difficulty === 'Medium' ? 'selected' : ''}`}
-              onClick={() => setModalForm({ ...modalForm, difficulty: 'Medium' })}
-            >
-              <img 
-                src={mediumDifficulty} 
-                alt="Medium" 
-                className="difficulty-icon"
-              />
-              <span className="difficulty-label">Medium</span>
-            </div>
-            <div 
-              className={`difficulty-option ${modalForm.difficulty === 'Hard' ? 'selected' : ''}`}
-              onClick={() => setModalForm({ ...modalForm, difficulty: 'Hard' })}
-            >
-              <img 
-                src={hardDifficulty} 
-                alt="Hard" 
-                className="difficulty-icon"
-              />
-              <span className="difficulty-label">Hard</span>
-            </div>
+          </label>
+          <label>
+            Due Date:
+            <input
+              type="date"
+              value={modalForm.due_date}
+              onChange={e => setModalForm({ ...modalForm, due_date: e.target.value })}
+            />
+          </label>
+          <div style={{ marginTop: '1rem' }}>
+            <button type="submit" className="submit-btn">
+              {selectedTask ? "Update Task" : "Add Task"}
+            </button>
+            <button type="button" onClick={() => setIsModalOpen(false)} className="cancel-btn">
+              Cancel
+            </button>
           </div>
-        </label>
-        <label>
-          Due Date:
-          <input
-            type="date"
-            value={modalForm.due_date}
-            onChange={e => setModalForm({ ...modalForm, due_date: e.target.value })}
-          />
-        </label>
-        <div style={{ marginTop: '1rem' }}>
-          <button type="submit" className="submit-btn">
-            {selectedTask ? "Update Task" : "Add Task"}
-          </button>
-          <button type="button" onClick={() => setIsModalOpen(false)} className="cancel-btn">
-            Cancel
-          </button>
-        </div>
-      </form>
-    </Modal>
+        </form>
+      </Modal>
     </div>
   );
 };

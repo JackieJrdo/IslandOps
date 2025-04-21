@@ -831,14 +831,6 @@
   margin-bottom: -7rem
 }
 
-/* .dashboard-container .pomodoro-settings {
-  width: 100%;
-  display: none;
-  flex-direction: column;
-  gap: 1rem;
-  margin-top: -10rem;
-} */
-
 .dashboard-container .pomodoro-container.expanded .pomodoro-settings {
   display: flex;
 }

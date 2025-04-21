@@ -59,11 +59,11 @@
 }
 
 .pomodoro-container.session {
-  background-color: rgba(238, 139, 93, 0.378);
+  background-color: rgba(255, 213, 179, 0.623);
 }
 
 .pomodoro-container.break {
-  background-color: rgba(182, 196, 184, 0.74);
+  background-color: rgba(215, 228, 213, 0.764);
 }
 
 .timer-display {
@@ -158,4 +158,8 @@
   font-size: 1.2rem;
   font-weight: 500;
   min-width: 2rem;
+}
+
+.timer-header h3 {
+  color: #68472C;
 } 

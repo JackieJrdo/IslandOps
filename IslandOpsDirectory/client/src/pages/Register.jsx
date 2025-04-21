@@ -10,7 +10,6 @@ import './Register.css';
 
 /**
  * register component
- * handles new user registration with a modern, clean UI design
  * features a split layout with bare island image on the left and account creation form on the right
  * backend expects first name, last name, username, email, and password for registration
  */
@@ -113,7 +112,6 @@ const Register = () => {
       return;
     }
 
-    // TODO: Implement registration logic here
     // backend expects: { firstname, lastname, email, username, password }
     const newUser = {
       firstname: firstName,
