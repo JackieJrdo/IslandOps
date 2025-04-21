@@ -90,8 +90,8 @@ const Login = () => {
       <nav className="nav-bar">
         <div className="logo">IslandOps</div>
         <div className="nav-links">
-          <Link to="/about">about</Link>
-          <Link to="/contact">contact us</Link>
+          <Link to="/about" className="nav-link">about us</Link>
+          <Link to="/contact" className="nav-link">contact us</Link>
         </div>
       </nav>
 

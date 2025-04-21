@@ -3,7 +3,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.2rem 4rem;
+  padding: 1.5rem 4rem;
   width: 100%;
   background-color: rgba(104, 71, 44, 0.1);
   position: fixed;
@@ -27,7 +27,7 @@
   gap: 2.5rem;
 }
 
-.nav-links a {
+.nav-link {
   color: #68472C;
   text-decoration: none;
   font-size: 1.1rem;
@@ -35,7 +35,7 @@
   transition: color 0.2s ease;
 }
 
-.nav-links a:hover {
+.nav-link:hover {
   color: #CC5723;
 }
 

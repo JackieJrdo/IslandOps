@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import Modal from 'react-modal';
 import axios from 'axios'; // for HTTP requests
@@ -17,41 +17,45 @@ import easyDifficulty from '../assets/easy_difficulty.png';
 import mediumDifficulty from '../assets/medium_difficulty.png';
 import hardDifficulty from '../assets/hard_difficulty.png';
 
+// base url for task api endpoints
 const API_BASE_URL = "http://localhost:5000/api/tasks";
 
-
+// main dashboard component with kanban board and task management
 const Dashboard = () => {
   const navigate = useNavigate();
   
-  // TODO: replace with database fetch
-  // task object requirements: id, title, description, difficulty, dueDate
+  // state for tasks organized by status
   const [tasks, setTasks] = useState({
     todo: [],
     inProgress: [],
     completed: []
   });
 
+  // state for task modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalColumn, setModalColumn] = useState(null);
   const [modalForm, setModalForm] = useState({
-  title: '',
-  description: '',
-  difficulty: 'Easy',
-  due_date: ''
+    title: '',
+    description: '',
+    difficulty: 'Easy',
+    due_date: ''
   });
 
-  // Energy levels: 1 = sleepy, 2 = meh, 3 = neutral, 4 = ready, 5 = energized
+  // state for energy level (1-5)
   const [energyLevel, setEnergyLevel] = useState(3);
 
+  // state for loading and error handling
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Add new state for island progress
+  // state for island progress tracking
   const [islandProgress, setIslandProgress] = useState(0);
 
+  // state for energy status dropdown
   const [isEnergyExpanded, setIsEnergyExpanded] = useState(false);
 
-  const fetchTasks = async () => { // TODO: Check if this connects and works with backend as intended
+  // fetch tasks from backend and organize by status
+  const fetchTasks = async () => {
     setLoading(true);
     setError(null);
     try {
@@ -59,7 +63,7 @@ const Dashboard = () => {
       const response = await axios.get(API_BASE_URL, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      // organizes tasks by status
+      // organize tasks by status
       const grouped = { todo: [], inProgress: [], completed: [] };
       response.data.forEach(task => {
         if (task.status === 'todo') grouped.todo.push(task);
@@ -70,18 +74,17 @@ const Dashboard = () => {
     } catch (err) {
       console.error(err.response?.data || err.message || err);
       setError('Failed to load tasks');
-
     }
     setLoading(false);
   };
-  
 
+  // energy level images and labels
   const energyImages = {
-    1: sleepy,    // very low energy
-    2: sad,       // low energy
-    3: neutral,   // moderate energy
-    4: happy,     // high energy
-    5: excited    // very high energy
+    1: sleepy,    // sleepy
+    2: sad,       // meh
+    3: neutral,   // neutral
+    4: happy,     // ready
+    5: excited    // energized
   };
 
   const energyLabels = {
@@ -94,19 +97,18 @@ const Dashboard = () => {
 
   const currentEnergy = energyImages[energyLevel];
 
+  // handle energy level change
   const handleEnergyChange = (newLevel) => {
     setEnergyLevel(newLevel);
     setIsEnergyExpanded(false);
-    // TODO: Update energy level in database
-    // This will make it easier to track energy trends over time
-    // and suggest tasks based on historical energy patterns
   };
 
+  // toggle energy status dropdown
   const toggleEnergyStatus = () => {
     setIsEnergyExpanded(!isEnergyExpanded);
   };
 
-  // authentication check - temporarily disabled for development
+  // check if user is authenticated
   React.useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -114,7 +116,12 @@ const Dashboard = () => {
     }
   }, [navigate]);
 
-  // Calculate task points based on difficulty
+  // fetch tasks on component mount
+  React.useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  // calculate points for task difficulty
   const getTaskPoints = (difficulty) => {
     switch(difficulty.toLowerCase()) {
       case 'hard': return 3;
@@ -124,23 +131,22 @@ const Dashboard = () => {
     }
   };
 
-  // Calculate total possible points from all tasks
+  // calculate total possible points from all tasks
   const calculateTotalPossiblePoints = () => {
     const allTasks = [...tasks.todo, ...tasks.inProgress, ...tasks.completed];
     return allTasks.reduce((total, task) => total + getTaskPoints(task.difficulty), 0);
   };
 
-  // Calculate current points from completed tasks
+  // calculate points from completed tasks
   const calculateCurrentPoints = () => {
     return tasks.completed.reduce((total, task) => total + getTaskPoints(task.difficulty), 0);
   };
 
-  // Update island progress whenever tasks change
+  // update island progress when tasks change
   React.useEffect(() => {
     const totalPossiblePoints = calculateTotalPossiblePoints();
     const currentPoints = calculateCurrentPoints();
     
-    // Calculate progress percentage
     const progress = totalPossiblePoints > 0 
       ? (currentPoints / totalPossiblePoints) * 100 
       : 0;
@@ -148,132 +154,57 @@ const Dashboard = () => {
     setIslandProgress(progress);
   }, [tasks]);
 
-  // TODO: database integration points:
-  // 1. fetch tasks on component mount
-  // 2. update task status when dragged
-  // 3. create new tasks
-  // 4. update energy status
-  // 5. track island progress
-
+  // handle task drag and drop
   const handleDragEnd = async (result) => {
     const { source, destination } = result;
 
-    // dropped outside a valid droppable area
+    // check if drop is valid
     if (!destination) return;
-
-    // same position
-    if (
-      destination.droppableId === source.droppableId &&
-      destination.index === source.index
-    ) return;
-
-    // get source and destination lists
-
-    // const sourceList = tasks[source.droppableId];
-    // const destList = tasks[destination.droppableId];
-  
-    // create copies of the lists 
-    // const newSourceList = Array.from(sourceList);
-    // const newDestList = source.droppableId === destination.droppableId 
-    //   ? newSourceList 
-    //   : Array.from(destList);
-
-    // remove task from source list
-    // const [movedTask] = newSourceList.splice(source.index, 1);
-
-    // add task to destination list
-    // if (source.droppableId === destination.droppableId) {
-    //   newSourceList.splice(destination.index, 0, movedTask);
-    // } else {
-    //   newDestList.splice(destination.index, 0, movedTask);
-    // }
-
-    // update state
-    // setTasks({
-    //   ...tasks,
-    //   [source.droppableId]: newSourceList,
-    //   [destination.droppableId]: source.droppableId === destination.droppableId 
-    //     ? newSourceList 
-    //     : newDestList
-    // });
-
+    if (destination.droppableId === source.droppableId && destination.index === source.index) return;
     
     try {
-      // FIRST get task data FROM ORIGINAL STATE
+      // get task data and update status
       const movedTask = tasks[source.droppableId][source.index];
       const updatedTask = { 
         ...movedTask, 
         status: destination.droppableId,
         completed: destination.droppableId === 'completed' 
       };
-      // THEN API call to update task in backend
+      
+      // update task in backend
       const token = localStorage.getItem('token');
       await axios.put(`${API_BASE_URL}/${movedTask.id}`, updatedTask, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // LAST refresh tasks from backend AFTER successful update
+      // refresh tasks after update
       fetchTasks();
     } catch (err) {
       alert('Failed to update task status');
-      // Optional: Revert local state if desired
     }
   };
 
+  // handle user logout
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/');
   };
 
-  // const handleAddTask = async(column) => {
-  //   // TODO: implement modal for new task creation
-  //   // fields needed:
-  //   // - title
-  //   // - description
-  //   // - due date (optional)
-  //   // - difficulty (low, medium, hard)
-
-  //   // console.log(`Adding task to ${column}`);
-
-  //   const title = window.prompt('Task title:');
-  //   if (!title) return;
-  //   const description = window.prompt('Description:');
-  //   const difficulty = window.prompt('Difficulty (Easy, Medium, Hard):', 'Easy');
-  //   const due_date = window.prompt('Due Date (YYYY-MM-DD):');
-
-  //   try {
-  //     const token = localStorage.getItem('token');
-  //     await axios.post(API_BASE_URL, {
-  //       title,
-  //       description,
-  //       completed: false,
-  //       status: column,
-  //       difficulty,
-  //       points: difficulty === 'Hard' ? 5 : difficulty === 'Medium' ? 3 : 1,
-  //       due_date
-  //     }, {
-  //       headers: { Authorization: `Bearer ${token}` }
-  //     });
-  //     fetchTasks();
-  //   } catch (err) {
-  //     alert('Failed to create task');
-  //   }
-  // };
-
-  const [selectedTask, setSelectedTask] = useState(null);
-
+  // handle task submission (create or update)
   const handleTaskSubmit = async (taskData) => {
     try {
       const token = localStorage.getItem('token');
       
-      if (selectedTask) { // edit only available if task exists
+      if (selectedTask) {
+        // update existing task
         await axios.put(`${API_BASE_URL}/${selectedTask.id}`, {
           ...selectedTask,
           ...taskData
         }, {
           headers: { Authorization: `Bearer ${token}` }
         });
-      } else { // logic for handleTaskAdd
+      } else {
+        // create new task
         await axios.post(API_BASE_URL, {
           ...taskData,
           completed: false,
@@ -291,6 +222,7 @@ const Dashboard = () => {
     }
   };
 
+  // handle task deletion
   const handleDeleteTask = async (taskId) => {
     if (!window.confirm('Are you sure you want to delete this task?')) return;
     
@@ -299,13 +231,13 @@ const Dashboard = () => {
       await axios.delete(`${API_BASE_URL}/${taskId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      fetchTasks(); // need to refresh the tasks list after deletion
+      fetchTasks();
     } catch (err) {
       alert('Failed to delete task');
     }
   };
 
-  // rendering task card component
+  // task card component
   const TaskCard = ({ task, index }) => (
     <Draggable draggableId={task.id.toString()} index={index}>
       {(provided, snapshot) => (
@@ -318,7 +250,7 @@ const Dashboard = () => {
           <span className="task-difficulty">{task.difficulty}</span>
           <button
             onClick={() => {
-              setSelectedTask(null); // make sure we're in add mode
+              setSelectedTask(null);
               setModalColumn(id);
               setModalForm({
                 title: '',
@@ -335,7 +267,7 @@ const Dashboard = () => {
             onClick={(e) => {
               e.stopPropagation();
               setSelectedTask(task);
-              setModalColumn(task.status); // use the task's current column/status
+              setModalColumn(task.status);
               setModalForm({
                 title: task.title,
                 description: task.description,
@@ -368,12 +300,11 @@ const Dashboard = () => {
     </Draggable>
   );
 
-  // render column component
+  // kanban column component
   const Column = ({ title, tasks, id }) => (
     <div className="kanban-column">
       <div className="column-header">
         <h2>{title}</h2>
-        {/* THIS WAS REPLACED:  <button onClick={() => handleAddTask(id)} className="add-task-btn">+ New Task</button> */}
         <button
           onClick={() => {
             setSelectedTask(null);
@@ -381,7 +312,7 @@ const Dashboard = () => {
             setModalForm({
               title: '',
               description: '',
-              difficulty: 'Easy', // right now Easy shows up as the default
+              difficulty: 'Easy',
               due_date: ''
             });
             setIsModalOpen(true);
@@ -406,13 +337,16 @@ const Dashboard = () => {
     </div>
   );
 
+  const [selectedTask, setSelectedTask] = useState(null);
+
   return (
     <div className="dashboard-container">
       <nav className="nav-bar">
         <div className="logo">IslandOps</div>
         <div className="nav-links">
-          <span className="nav-link">dashboard</span>
-          <span className="nav-link">contact us</span>
+          <Link to="/dashboard" className="nav-link">dashboard</Link>
+          <Link to="/about" className="nav-link">about us</Link>
+          <Link to="/contact" className="nav-link">contact us</Link>
           <button onClick={handleLogout} className="logout-btn">
             <img src={profileIcon} alt="Profile" className="profile-icon" />
           </button>
