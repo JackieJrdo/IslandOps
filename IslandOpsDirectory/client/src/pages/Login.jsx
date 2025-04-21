@@ -90,7 +90,6 @@ const Login = () => {
       <nav className="nav-bar">
         <div className="logo">IslandOps</div>
         <div className="nav-links">
-          <Link to="/">home</Link>
           <Link to="/about">about</Link>
           <Link to="/contact">contact us</Link>
         </div>

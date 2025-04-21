@@ -32,24 +32,10 @@ body {
   width: 100%;
 }
 
-/* "IslandOps" text in top left corner */
-.logo {
-  font-size: 1.5rem;
-  color: #68472C;
-  font-weight: 500;
-}
-
 /* nav links container in top right */
 .nav-links {
   display: flex;
   gap: 2rem;
-}
-
-/* individual nav links (home, about, contact us) */
-.nav-links a {
-  color: #68472C;
-  text-decoration: none;
-  font-size: 1rem;
 }
 
 /* main content area - split into left and right sections */
@@ -92,7 +78,7 @@ body {
 .signin-text {
   font-size: 2rem;
   color: #68472C;
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
   align-self: flex-start;
   margin-left: 5rem;
 }
