@@ -12,18 +12,13 @@ import happy from '../assets/ready_energy.png';
 import excited from '../assets/energized_energy.png';
 import profileIcon from '../assets/profile_icon.png';
 import './Dashboard.css';
+import PomodoroTimer from '../components/PomodoroTimer';
+import easyDifficulty from '../assets/easy_difficulty.png';
+import mediumDifficulty from '../assets/medium_difficulty.png';
+import hardDifficulty from '../assets/hard_difficulty.png';
 
 const API_BASE_URL = "http://localhost:5000/api/tasks";
 
-// TODO: Import your images and icons:
-// - Profile icon for nav bar
-// - Stick figure notification icon
-// - Island visualization image
-// - Energy status emojis
-// Color codes to use:
-// - Background: #E5DCC3
-// - Nav bar: #A52A2A
-// - Accent color: #FF6B35
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -50,6 +45,11 @@ const Dashboard = () => {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Add new state for island progress
+  const [islandProgress, setIslandProgress] = useState(0);
+
+  const [isEnergyExpanded, setIsEnergyExpanded] = useState(false);
 
   const fetchTasks = async () => { // TODO: Check if this connects and works with backend as intended
     setLoading(true);
@@ -96,9 +96,14 @@ const Dashboard = () => {
 
   const handleEnergyChange = (newLevel) => {
     setEnergyLevel(newLevel);
+    setIsEnergyExpanded(false);
     // TODO: Update energy level in database
     // This will make it easier to track energy trends over time
     // and suggest tasks based on historical energy patterns
+  };
+
+  const toggleEnergyStatus = () => {
+    setIsEnergyExpanded(!isEnergyExpanded);
   };
 
   // authentication check - temporarily disabled for development
@@ -108,6 +113,40 @@ const Dashboard = () => {
       navigate('/');
     }
   }, [navigate]);
+
+  // Calculate task points based on difficulty
+  const getTaskPoints = (difficulty) => {
+    switch(difficulty.toLowerCase()) {
+      case 'hard': return 3;
+      case 'medium': return 2;
+      case 'easy': return 1;
+      default: return 1;
+    }
+  };
+
+  // Calculate total possible points from all tasks
+  const calculateTotalPossiblePoints = () => {
+    const allTasks = [...tasks.todo, ...tasks.inProgress, ...tasks.completed];
+    return allTasks.reduce((total, task) => total + getTaskPoints(task.difficulty), 0);
+  };
+
+  // Calculate current points from completed tasks
+  const calculateCurrentPoints = () => {
+    return tasks.completed.reduce((total, task) => total + getTaskPoints(task.difficulty), 0);
+  };
+
+  // Update island progress whenever tasks change
+  React.useEffect(() => {
+    const totalPossiblePoints = calculateTotalPossiblePoints();
+    const currentPoints = calculateCurrentPoints();
+    
+    // Calculate progress percentage
+    const progress = totalPossiblePoints > 0 
+      ? (currentPoints / totalPossiblePoints) * 100 
+      : 0;
+    
+    setIslandProgress(progress);
+  }, [tasks]);
 
   // TODO: database integration points:
   // 1. fetch tasks on component mount
@@ -396,35 +435,68 @@ const Dashboard = () => {
 
           <DragDropContext onDragEnd={handleDragEnd}>
             <div className="kanban-board">
-              <Column title="TO-DO" tasks={tasks.todo} id="todo" />
-              <Column title="IN PROGRESS" tasks={tasks.inProgress} id="inProgress" />
-              <Column title="COMPLETED" tasks={tasks.completed} id="completed" />
+              <div className="kanban-columns-wrapper">
+                <Column title="TO-DO" tasks={tasks.todo} id="todo" />
+                <Column title="IN PROGRESS" tasks={tasks.inProgress} id="inProgress" />
+                <Column title="COMPLETED" tasks={tasks.completed} id="completed" />
+              </div>
             </div>
           </DragDropContext>
         </div>
 
         <div className="right-section">
-          <div className="island-container">
-            <img src={bareIslandImage} alt="Island" className="island-image" />
-            <div className="progress-bar">
-              <img src={progressBar} alt="Progress Bar" className="progress-bar-image" />
-            </div>
-          </div>
-          <div className="energy-status">
-            <h2>ENERGY STATUS:</h2>
-            <div className="current-energy">
+          <div className="right-section-scroll">
+            <div className="island-container">
+              <div className="progress-bar">
+                <div 
+                  className="progress-bar-fill" 
+                  style={{ width: `${islandProgress}%` }}
+                />
+              </div>
               <img 
-                src={currentEnergy} 
-                alt={`Current Energy: ${energyLabels[energyLevel]}`} 
-                className="current-energy-image" 
+                src={bareIslandImage} 
+                alt="Your island" 
+                className="island-image" 
               />
-            </div>
-            <div className="energy-options">
-              <img src={sleepy} alt="Sleepy" className="energy-option" onClick={() => handleEnergyChange(1)} />
-              <img src={sad} alt="Meh" className="energy-option" onClick={() => handleEnergyChange(2)} />
-              <img src={neutral} alt="Neutral" className="energy-option" onClick={() => handleEnergyChange(3)} />
-              <img src={happy} alt="Ready" className="energy-option" onClick={() => handleEnergyChange(4)} />
-              <img src={excited} alt="Energized" className="energy-option" onClick={() => handleEnergyChange(5)} />   
+              <div className="tools-container">
+                <div className="tool-wrapper energy">
+                  <div 
+                    className={`tool-box energy-status ${!isEnergyExpanded ? 'collapsed' : 'expanded'}`}
+                    onClick={!isEnergyExpanded ? toggleEnergyStatus : undefined}
+                  >
+                    <h3 className="section-title">Energy Status</h3>
+                    <div className="current-energy">
+                      <img 
+                        src={currentEnergy} 
+                        alt={energyLabels[energyLevel]} 
+                        className="current-energy-image" 
+                      />
+                    </div>
+                    {isEnergyExpanded && (
+                      <div className="energy-options">
+                        {Object.entries(energyImages).map(([level, image]) => (
+                          <img
+                            key={level}
+                            src={image}
+                            alt={energyLabels[level]}
+                            className="energy-option"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEnergyChange(Number(level));
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="tool-wrapper pomodoro">
+                  <div className="tool-box pomodoro-container">
+                    <h3 className="section-title">Pomodoro Timer</h3>
+                    <PomodoroTimer />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -471,14 +543,41 @@ const Dashboard = () => {
         </label>
         <label>
           Difficulty:
-          <select
-            value={modalForm.difficulty}
-            onChange={e => setModalForm({ ...modalForm, difficulty: e.target.value })}
-          >
-            <option value="Easy">Easy</option>
-            <option value="Medium">Medium</option>
-            <option value="Hard">Hard</option>
-          </select>
+          <div className="difficulty-options">
+            <div 
+              className={`difficulty-option ${modalForm.difficulty === 'Easy' ? 'selected' : ''}`}
+              onClick={() => setModalForm({ ...modalForm, difficulty: 'Easy' })}
+            >
+              <img 
+                src={easyDifficulty} 
+                alt="Easy" 
+                className="difficulty-icon"
+              />
+              <span className="difficulty-label">Easy</span>
+            </div>
+            <div 
+              className={`difficulty-option ${modalForm.difficulty === 'Medium' ? 'selected' : ''}`}
+              onClick={() => setModalForm({ ...modalForm, difficulty: 'Medium' })}
+            >
+              <img 
+                src={mediumDifficulty} 
+                alt="Medium" 
+                className="difficulty-icon"
+              />
+              <span className="difficulty-label">Medium</span>
+            </div>
+            <div 
+              className={`difficulty-option ${modalForm.difficulty === 'Hard' ? 'selected' : ''}`}
+              onClick={() => setModalForm({ ...modalForm, difficulty: 'Hard' })}
+            >
+              <img 
+                src={hardDifficulty} 
+                alt="Hard" 
+                className="difficulty-icon"
+              />
+              <span className="difficulty-label">Hard</span>
+            </div>
+          </div>
         </label>
         <label>
           Due Date:
