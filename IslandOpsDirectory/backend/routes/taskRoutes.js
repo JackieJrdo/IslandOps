@@ -98,22 +98,27 @@ router.delete('/:id', authenticateUser, async (req, res) => {
 
 
 router.get('/sorted-by-energy/:energy', authenticateUser, async (req, res) => {
+    // get the user_id of the user logged in and their current energy level
     const user_id = req.user.user_id;
     const energy = parseInt(req.params.energy);
 
     let difficultyOrder;
-
+    // determine task sorting order based off of energy level
+    // for users who are the two lowest energy levels
     if (energy <= 2) {
         difficultyOrder = ['Easy', 'Medium', 'Hard'];
     }
+    // for users who are in the middle
     else if (energy === 3) {
         difficultyOrder = ['Medium', 'Easy', 'Hard'];
     }
+    // for users who are the two highest energy levels
     else {
         difficultyOrder = ['Hard', 'Medium', 'Easy'];
     }
 
     try {
+       // SQL query to pull from the database in the order of task difficulty based on the user's energy level
         const result = await pool.query(`
             SELECT * FROM "task"
             WHERE User_id = $1 AND completed = false
@@ -129,6 +134,7 @@ router.get('/sorted-by-energy/:energy', authenticateUser, async (req, res) => {
     }
     catch (err) {
         console.error(err);
+        // if error, send error message to client
         res.status(500).json({ error: 'Failed to fetch energy-based sorted tasks' });
     }
 });
