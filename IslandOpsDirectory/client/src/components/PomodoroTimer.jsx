@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import './PomodoroTimer.css';
 import pomodoroIcon from '../assets/pomodoro_icon.png';
 
+// pomodoro timer component with work/break sessions
 const PomodoroTimer = () => {
+  // timer state
   const [sessionLength, setSessionLength] = useState(25);
   const [breakLength, setBreakLength] = useState(5);
   const [timeLeft, setTimeLeft] = useState(sessionLength * 60);
@@ -10,12 +12,14 @@ const PomodoroTimer = () => {
   const [isSession, setIsSession] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // format time as mm:ss
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // handle session length changes
   const handleSessionChange = (amount) => {
     if (!isRunning && sessionLength + amount > 0 && sessionLength + amount <= 60) {
       setSessionLength(sessionLength + amount);
@@ -23,6 +27,7 @@ const PomodoroTimer = () => {
     }
   };
 
+  // handle break length changes
   const handleBreakChange = (amount) => {
     if (!isRunning && breakLength + amount > 0 && breakLength + amount <= 60) {
       setBreakLength(breakLength + amount);
@@ -30,10 +35,12 @@ const PomodoroTimer = () => {
     }
   };
 
+  // toggle timer start/pause
   const toggleTimer = () => {
     setIsRunning(!isRunning);
   };
 
+  // reset timer to initial state
   const resetTimer = () => {
     setIsRunning(false);
     setIsSession(true);
@@ -41,12 +48,14 @@ const PomodoroTimer = () => {
     if (!isRunning) setIsExpanded(false);
   };
 
+  // skip current session
   const skipSession = () => {
     setIsSession(!isSession);
     setTimeLeft(isSession ? breakLength * 60 : sessionLength * 60);
     setIsRunning(false);
   };
 
+  // handle icon click to expand/collapse
   const handleIconClick = () => {
     setIsExpanded(!isExpanded);
     if (!isExpanded) {
@@ -56,6 +65,7 @@ const PomodoroTimer = () => {
     }
   };
 
+  // timer countdown effect
   useEffect(() => {
     let interval;
     if (isRunning && timeLeft > 0) {
@@ -69,6 +79,7 @@ const PomodoroTimer = () => {
     return () => clearInterval(interval);
   }, [isRunning, timeLeft, isSession, sessionLength, breakLength]);
 
+  // collapsed view with just icon
   if (!isExpanded && !isRunning) {
     return (
       <div className="tool-box pomodoro-icon-container" onClick={handleIconClick}>
@@ -77,6 +88,7 @@ const PomodoroTimer = () => {
     );
   }
 
+  // expanded timer view
   return (
     <div className={`pomodoro-container ${isSession ? 'session' : 'break'}`}>
       <div className="timer-header">
