@@ -188,6 +188,12 @@ input:focus {
   font-size: 0.9rem;
 }
 
+.success-text {
+  color: green;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
 @media (max-width: 1200px) {
   .register-content {
     gap: 3rem;

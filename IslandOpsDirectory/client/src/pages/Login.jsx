@@ -22,6 +22,10 @@ const Login = () => {
 
   const [serverError, setServerError] = useState('');
 
+  const [loginStatus, setLoginStatus] = useState('');
+
+
+
   const FormValidation = () => {
 
     const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
@@ -60,12 +64,13 @@ const Login = () => {
       // stores token on local storage so that token storage is persistent
       if (res.ok) {
         localStorage.setItem("token", data.token);
-        alert("Login successful!");
         setErrors({});
         setServerError('');
+        setLoginStatus("Login successful!");
         navigate('/dashboard');
       }
       else {
+        setLoginStatus('');
         if(data.error === "Invalid username.") {
           setErrors({ username: data.error });
         }
@@ -75,12 +80,12 @@ const Login = () => {
         else {
         setServerError(data.error || "Login failed");
         }
-        //alert("Login failed");
       }
     }
     catch (err) {
       console.error("Login error: ", err);
       setServerError("There was an issue. Please try again.");
+      setLoginStatus('');
     };
   };
 
@@ -105,6 +110,8 @@ const Login = () => {
 
         {/* right section with login form */}
         <div className="right-section">
+        {loginStatus && <p className="success-text">{loginStatus}</p>}
+        {serverError && <p className="error-text">{serverError}</p>}
           <form onSubmit={handleSubmit}>
             {/* username input group with icon, existing error above container */}
             {errors.username && <p className="error-text">{errors.username}</p>}
