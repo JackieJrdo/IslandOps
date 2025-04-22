@@ -57,6 +57,8 @@ const Dashboard = () => {
     width: window.innerWidth,
     height: window.innerHeight
   });
+  const [sortByEnergy, setSortByEnergy] = useState(false);
+  const [lastLevelUpPoints, setLastLevelUpPoints] = useState(0);
 
   // fetch tasks based on sort type
   const fetchTasks = async () => {
@@ -66,7 +68,8 @@ const Dashboard = () => {
       const token = localStorage.getItem('token');
       let response;
       
-      if (isEnergySort) {
+      // fetch tasks sorted by energy level if energy sort is active, otherwise by due date
+      if (sortByEnergy) {
         response = await axios.get(`${API_BASE_URL}/sorted-by-energy/${energyLevel}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -76,6 +79,7 @@ const Dashboard = () => {
         });
       }
 
+      // group tasks by status (todo, inProgress, completed)
       const grouped = { todo: [], inProgress: [], completed: [] };
       response.data.forEach(task => {
         if (task.status === 'todo') grouped.todo.push(task);
@@ -120,12 +124,10 @@ const Dashboard = () => {
     setIsEnergyExpanded(!isEnergyExpanded);
   };
 
+  // toggle between energy and date sorting, refetch tasks with new sort
   const handleSortToggle = () => {
-    setIsEnergySort(prev => {
-      const newValue = !prev;
-      setTimeout(() => fetchTasks(), 0);
-      return newValue;
-    });
+    setSortByEnergy(!sortByEnergy);
+    fetchTasks();
   };
 
   // auth check
@@ -136,17 +138,18 @@ const Dashboard = () => {
     }
   }, [navigate]);
 
-  // initial tasks fetch
+  // initial tasks fetch on component mount
   React.useEffect(() => {
     fetchTasks();
   }, []);
 
-  // resort tasks when energy changes
+  // refetch tasks when energy level changes and energy sort is active
+  // this ensures tasks are resorted based on new energy level
   React.useEffect(() => {
-    if (isEnergySort) {
+    if (sortByEnergy) {
       fetchTasks();
     }
-  }, [energyLevel]);
+  }, [energyLevel, sortByEnergy]);
 
   // task points based on difficulty
   const getTaskPoints = (difficulty) => {
@@ -160,13 +163,31 @@ const Dashboard = () => {
 
   // calculate total possible points
   const calculateTotalPossiblePoints = () => {
-    const allTasks = [...tasks.todo, ...tasks.inProgress, ...tasks.completed];
-    return allTasks.reduce((total, task) => total + getTaskPoints(task.difficulty), 0);
+    return tasks.completed.reduce((total, task) => {
+      return total + (task.difficulty === 'Easy' ? 10 : task.difficulty === 'Medium' ? 20 : 30);
+    }, 0);
   };
 
-  // calculate points from completed tasks
-  const calculateCurrentPoints = () => {
-    return tasks.completed.reduce((total, task) => total + getTaskPoints(task.difficulty), 0);
+  // calculate points from newly completed tasks only
+  const calculateNewPoints = () => {
+    const currentPoints = tasks.completed.reduce((total, task) => {
+      switch(task.difficulty) {
+        case 'Easy': return total + 1;
+        case 'Medium': return total + 3;
+        case 'Hard': return total + 5;
+        default: return total;
+      }
+    }, 0);
+    
+    // Only count points earned since last level up
+    return currentPoints - lastLevelUpPoints;
+  };
+
+  // calculate required points for current level
+  // each level requires level * 10 points
+  // e.g. level 1 needs 10 points, level 2 needs 20 points, etc.
+  const getRequiredPointsForLevel = (level) => {
+    return level * 10;
   };
 
   // map progress to island stage
@@ -207,32 +228,74 @@ const Dashboard = () => {
 
   // Update the useEffect for level up
   React.useEffect(() => {
-    const totalPossiblePoints = calculateTotalPossiblePoints();
-    const currentPoints = calculateCurrentPoints();
-    const progress = totalPossiblePoints > 0 ? (currentPoints / totalPossiblePoints) * 100 : 0;
+    const newPoints = calculateNewPoints();
+    const requiredPoints = getRequiredPointsForLevel(islandStage);
     
-    if (progress >= 100) {
-      setShowLevelUp(true);
-      setShowConfetti(true);
-      setTimeout(() => {
-        setShowLevelUp(false);
-        setShowConfetti(false);
-      }, 2000);
-      setCurrentProgress(0);
+    console.log('New Points since last level:', newPoints);
+    console.log('Required Points:', requiredPoints);
+    console.log('Current Level:', islandStage);
+    
+    // Calculate progress for current level
+    let progress = 0;
+    let newLevel = islandStage;
+    
+    // If we have enough points for current level
+    if (newPoints >= requiredPoints) {
+      // Calculate leftover points
+      const leftoverPoints = newPoints - requiredPoints;
+      console.log('Leftover Points:', leftoverPoints);
+      
+      // Move to next level if not at max
       if (islandStage < 6) {
-        setIslandStage(prev => prev + 1);
+        newLevel = islandStage + 1;
+        // Calculate progress for new level
+        progress = (leftoverPoints / getRequiredPointsForLevel(newLevel)) * 100;
+        console.log('Leveling up to:', newLevel);
+        console.log('New Progress:', progress);
+        
+        // Update last level up points
+        setLastLevelUpPoints(tasks.completed.reduce((total, task) => {
+          switch(task.difficulty) {
+            case 'Easy': return total + 1;
+            case 'Medium': return total + 3;
+            case 'Hard': return total + 5;
+            default: return total;
+          }
+        }, 0));
+        
+        // Show level up animation
+        setShowLevelUp(true);
+        setShowConfetti(true);
+        setTimeout(() => {
+          setShowLevelUp(false);
+          setShowConfetti(false);
+        }, 2000);
+      } else {
+        progress = 100;
       }
     } else {
-      setCurrentProgress(progress);
+      // Calculate progress for current level
+      progress = (newPoints / requiredPoints) * 100;
+      console.log('Current Progress:', progress);
     }
     
+    // Update island stage if level changed
+    if (newLevel !== islandStage) {
+      console.log('Updating island stage to:', newLevel);
+      setIslandStage(newLevel);
+    }
+    
+    // Update progress
+    setCurrentProgress(progress);
     setIslandProgress(progress);
-  }, [tasks]);
+  }, [tasks.completed, islandStage]);
 
-  // handle task drag and drop
+  // handle task drag and drop between columns
+  // updates task status in backend and handles points
   const handleDragEnd = async (result) => {
     const { source, destination } = result;
 
+    // ignore if dropped in same position or invalid destination
     if (!destination || 
         (destination.droppableId === source.droppableId && 
          destination.index === source.index)) {
@@ -248,9 +311,30 @@ const Dashboard = () => {
       };
       
       const token = localStorage.getItem('token');
+      // update task status in backend
       await axios.put(`${API_BASE_URL}/${movedTask.id}`, updatedTask, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      // handle points based on task movement
+      if (destination.droppableId === 'completed') {
+        // add points when task is completed
+        await axios.post(`${API_BASE_URL}/update-points`, {
+          taskId: movedTask.id,
+          difficulty: movedTask.difficulty
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } else if (source.droppableId === 'completed') {
+        // subtract points when task is removed from completed
+        await axios.post(`${API_BASE_URL}/update-points`, {
+          taskId: movedTask.id,
+          difficulty: movedTask.difficulty,
+          subtract: true
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
       
       fetchTasks();
     } catch (err) {
@@ -407,8 +491,23 @@ const Dashboard = () => {
           width={windowSize.width}
           height={windowSize.height}
           recycle={false}
-          numberOfPieces={200}
+          numberOfPieces={800}
           gravity={0.2}
+          wind={0.01}
+          initialVelocityY={20}
+          initialVelocityX={10}
+          confettiSource={{
+            x: windowSize.width / 2,
+            y: windowSize.height / 2,
+            w: 0,
+            h: 0
+          }}
+          colors={['#FFD700', '#FFA500', '#FF69B4', '#00CED1', '#9370DB', '#FF6347', '#32CD32', '#FF4500']}
+          opacity={0.9}
+          tweenDuration={8000}
+          spread={360}
+          particleCount={200}
+          angle={90}
         />
       )}
       <nav className="nav-bar">
