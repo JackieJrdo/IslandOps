@@ -1,9 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import Modal from 'react-modal';
 import axios from 'axios'; // for HTTP requests
 import bareIslandImage from '../assets/empty_island.png';
+import islandStage1 from '../assets/island_stage1.png';
+import islandStage2 from '../assets/island_stage2.png';
+import islandStage3 from '../assets/island_stage3.png';
+import islandStage4 from '../assets/island_stage4.png';
+import islandStage5 from '../assets/island_stage5.png';
+import islandStage6 from '../assets/island_stage6.png';
 import progressBar from '../assets/progress_bar.png';
 import sleepy from '../assets/sleepy_energy.png';
 import sad from '../assets/meh_energy.png';
@@ -17,6 +23,7 @@ import SortToggle from '../components/SortToggle';
 import easyDifficulty from '../assets/easy_difficulty.png';
 import mediumDifficulty from '../assets/medium_difficulty.png';
 import hardDifficulty from '../assets/hard_difficulty.png';
+import Confetti from 'react-confetti';
 
 // where we talk to the backend
 const API_BASE_URL = "http://localhost:5000/api/tasks";
@@ -25,25 +32,33 @@ const API_BASE_URL = "http://localhost:5000/api/tasks";
 const Dashboard = () => {
   const navigate = useNavigate();
   
-  // all the states we need
-  const [tasks, setTasks] = useState({ todo: [], inProgress: [], completed: [] }); // keeps track of all our tasks
-  const [isModalOpen, setIsModalOpen] = useState(false);  // for the add/edit task popup
-  const [modalColumn, setModalColumn] = useState(null);   // which column we're adding to
-  const [modalForm, setModalForm] = useState({           // info for the new/edited task
+  // states
+  const [tasks, setTasks] = useState({ todo: [], inProgress: [], completed: [] });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalColumn, setModalColumn] = useState(null);
+  const [modalForm, setModalForm] = useState({
     title: '',
     description: '',
     difficulty: 'Easy',
     due_date: ''
   });
-  const [energyLevel, setEnergyLevel] = useState(3);     // how energized you're feeling (1-5)
-  const [loading, setLoading] = useState(true);          // shows loading spinner
-  const [error, setError] = useState(null);              // shows error messages
-  const [islandProgress, setIslandProgress] = useState(0); // how complete your island is
-  const [isEnergyExpanded, setIsEnergyExpanded] = useState(false); // energy picker open/closed
-  const [isEnergySort, setIsEnergySort] = useState(false); // whether we're sorting by energy
-  const [selectedTask, setSelectedTask] = useState(null);   // task being edited
+  const [energyLevel, setEnergyLevel] = useState(3);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [islandProgress, setIslandProgress] = useState(0);
+  const [isEnergyExpanded, setIsEnergyExpanded] = useState(false);
+  const [isEnergySort, setIsEnergySort] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [islandStage, setIslandStage] = useState(1);
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [currentProgress, setCurrentProgress] = useState(0);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [windowSize, setWindowSize] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight
+  });
 
-  // get tasks from backend based on sort type
+  // fetch tasks based on sort type
   const fetchTasks = async () => {
     setLoading(true);
     setError(null);
@@ -51,7 +66,6 @@ const Dashboard = () => {
       const token = localStorage.getItem('token');
       let response;
       
-      // pick which sorting endpoint to use
       if (isEnergySort) {
         response = await axios.get(`${API_BASE_URL}/sorted-by-energy/${energyLevel}`, {
           headers: { Authorization: `Bearer ${token}` }
@@ -62,7 +76,6 @@ const Dashboard = () => {
         });
       }
 
-      // split tasks into their columns
       const grouped = { todo: [], inProgress: [], completed: [] };
       response.data.forEach(task => {
         if (task.status === 'todo') grouped.todo.push(task);
@@ -78,13 +91,13 @@ const Dashboard = () => {
     setLoading(false);
   };
 
-  // energy stuff
+  // energy images and labels
   const energyImages = {
-    1: sleepy,    // totally exhausted
-    2: sad,       // kinda tired
-    3: neutral,   // okay energy
-    4: happy,     // pretty energized
-    5: excited    // super energized
+    1: sleepy,
+    2: sad,
+    3: neutral,
+    4: happy,
+    5: excited
   };
 
   const energyLabels = {
@@ -97,76 +110,129 @@ const Dashboard = () => {
 
   const currentEnergy = energyImages[energyLevel];
 
-  // what happens when energy changes
+  // energy change handler
   const handleEnergyChange = (newLevel) => {
     setEnergyLevel(newLevel);
-    setIsEnergyExpanded(false);  // close the energy picker
+    setIsEnergyExpanded(false);
   };
 
   const toggleEnergyStatus = () => {
-    setIsEnergyExpanded(!isEnergyExpanded);  // open/close energy picker
+    setIsEnergyExpanded(!isEnergyExpanded);
   };
 
   const handleSortToggle = () => {
-    setIsEnergySort(!isEnergySort);  // switch between date and energy sorting
-    fetchTasks();  // get tasks with new sorting
+    setIsEnergySort(prev => {
+      const newValue = !prev;
+      setTimeout(() => fetchTasks(), 0);
+      return newValue;
+    });
   };
 
-  // check if user is logged in
+  // auth check
   React.useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      navigate('/');  // go back to login if not logged in
+      navigate('/');
     }
   }, [navigate]);
 
-  // get tasks when page loads
+  // initial tasks fetch
   React.useEffect(() => {
     fetchTasks();
   }, []);
 
-  // get tasks again if energy changes while sorting by energy
+  // resort tasks when energy changes
   React.useEffect(() => {
     if (isEnergySort) {
-      fetchTasks();  // resort tasks when energy changes
+      fetchTasks();
     }
   }, [energyLevel]);
 
-  // figure out points for island progress
+  // task points based on difficulty
   const getTaskPoints = (difficulty) => {
     switch(difficulty.toLowerCase()) {
-      case 'hard': return 3;    // hard tasks worth 3 points
-      case 'medium': return 2;  // medium tasks worth 2 points
-      case 'easy': return 1;    // easy tasks worth 1 point
+      case 'hard': return 3;
+      case 'medium': return 2;
+      case 'easy': return 1;
       default: return 1;
     }
   };
 
-  // add up all possible points from all tasks
+  // calculate total possible points
   const calculateTotalPossiblePoints = () => {
     const allTasks = [...tasks.todo, ...tasks.inProgress, ...tasks.completed];
     return allTasks.reduce((total, task) => total + getTaskPoints(task.difficulty), 0);
   };
 
-  // add up points from completed tasks
+  // calculate points from completed tasks
   const calculateCurrentPoints = () => {
     return tasks.completed.reduce((total, task) => total + getTaskPoints(task.difficulty), 0);
   };
 
-  // update the island progress bar
+  // map progress to island stage
+  const getIslandStage = (progress) => {
+    if (progress >= 100) return 6;
+    if (progress >= 80) return 5;
+    if (progress >= 60) return 4;
+    if (progress >= 40) return 3;
+    if (progress >= 20) return 2;
+    return 1;
+  };
+
+  // get island image based on stage
+  const getIslandImage = () => {
+    switch(islandStage) {
+      case 1: return islandStage1;
+      case 2: return islandStage2;
+      case 3: return islandStage3;
+      case 4: return islandStage4;
+      case 5: return islandStage5;
+      case 6: return islandStage6;
+      default: return islandStage1;
+    }
+  };
+
+  // Update window size on resize
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Update the useEffect for level up
   React.useEffect(() => {
     const totalPossiblePoints = calculateTotalPossiblePoints();
     const currentPoints = calculateCurrentPoints();
-    // turn points into a percentage
     const progress = totalPossiblePoints > 0 ? (currentPoints / totalPossiblePoints) * 100 : 0;
+    
+    if (progress >= 100) {
+      setShowLevelUp(true);
+      setShowConfetti(true);
+      setTimeout(() => {
+        setShowLevelUp(false);
+        setShowConfetti(false);
+      }, 2000);
+      setCurrentProgress(0);
+      if (islandStage < 6) {
+        setIslandStage(prev => prev + 1);
+      }
+    } else {
+      setCurrentProgress(progress);
+    }
+    
     setIslandProgress(progress);
   }, [tasks]);
 
-  // handle moving tasks around
+  // handle task drag and drop
   const handleDragEnd = async (result) => {
     const { source, destination } = result;
 
-    // make sure the drop was valid
     if (!destination || 
         (destination.droppableId === source.droppableId && 
          destination.index === source.index)) {
@@ -174,7 +240,6 @@ const Dashboard = () => {
     }
     
     try {
-      // update the task's status in our state
       const movedTask = tasks[source.droppableId][source.index];
       const updatedTask = { 
         ...movedTask, 
@@ -182,32 +247,29 @@ const Dashboard = () => {
         completed: destination.droppableId === 'completed' 
       };
       
-      // save the change to the backend
       const token = localStorage.getItem('token');
       await axios.put(`${API_BASE_URL}/${movedTask.id}`, updatedTask, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // get fresh task list
       fetchTasks();
     } catch (err) {
       alert('Failed to update task status');
     }
   };
 
-  // log out the user
+  // logout handler
   const handleLogout = () => {
     localStorage.removeItem('token');
-    navigate('/');  // go back to login page
+    navigate('/');
   };
 
-  // save a new task or update existing one
+  // save new or update existing task
   const handleTaskSubmit = async (taskData) => {
     try {
       const token = localStorage.getItem('token');
       
       if (selectedTask) {
-        // update existing task
         await axios.put(`${API_BASE_URL}/${selectedTask.id}`, {
           ...selectedTask,
           ...taskData
@@ -215,7 +277,6 @@ const Dashboard = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
       } else {
-        // create new task
         await axios.post(API_BASE_URL, {
           ...taskData,
           completed: false,
@@ -226,14 +287,14 @@ const Dashboard = () => {
         });
       }
       
-      fetchTasks();  // refresh task list
-      setSelectedTask(null);  // clear selected task
+      fetchTasks();
+      setSelectedTask(null);
     } catch (err) {
       alert(selectedTask ? 'Failed to update task' : 'Failed to create task');
     }
   };
 
-  // delete a task after confirming
+  // delete task
   const handleDeleteTask = async (taskId) => {
     if (!window.confirm('Are you sure you want to delete this task?')) return;
     
@@ -242,7 +303,7 @@ const Dashboard = () => {
       await axios.delete(`${API_BASE_URL}/${taskId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      fetchTasks();  // refresh task list
+      fetchTasks();
     } catch (err) {
       alert('Failed to delete task');
     }
@@ -258,43 +319,33 @@ const Dashboard = () => {
           {...provided.dragHandleProps}
           className={`task-card ${snapshot.isDragging ? 'dragging' : ''}`}
         >
-          <span className="task-difficulty">{task.difficulty}</span>
-          <button
-            onClick={() => {
-              setSelectedTask(null);
-              setModalColumn(id);
-              setModalForm({
-                title: '',
-                description: '',
-                difficulty: 'Easy',
-                due_date: ''
-              });
-              setIsModalOpen(true);
-            }}
-            className="add-task-btn"
-          >+ New Task</button>
-          <button
-            className="edit-task-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedTask(task);
-              setModalColumn(task.status);
-              setModalForm({
-                title: task.title,
-                description: task.description,
-                difficulty: task.difficulty,
-                due_date: task.due_date || ''
-              });
-              setIsModalOpen(true);
-            }}
-          >✎</button>
-          <button 
-            className="delete-task-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeleteTask(task.id);
-            }}>×</button>
-          <p className="task-title">{task.title}</p>
+          <div className="task-header">
+            <span className="task-difficulty">{task.difficulty}</span>
+            <div className="task-actions">
+              <button
+                className="edit-task-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedTask(task);
+                  setModalColumn(task.status);
+                  setModalForm({
+                    title: task.title,
+                    description: task.description,
+                    difficulty: task.difficulty,
+                    due_date: task.due_date || ''
+                  });
+                  setIsModalOpen(true);
+                }}
+              >✎</button>
+              <button 
+                className="delete-task-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteTask(task.id);
+                }}>×</button>
+            </div>
+          </div>
+          <h3 className="task-title">{task.title}</h3>
           <p className="task-description">{task.description}</p>
           {task.labels && task.labels.length > 0 && (
             <div className="task-labels">
@@ -303,9 +354,11 @@ const Dashboard = () => {
               ))}
             </div>
           )}
-          <div className="task-due-date">
-            <span>{task.dueDate}</span>
-          </div>
+          {task.due_date && (
+            <div className="task-due-date">
+              <span>Due: {new Date(task.due_date).toLocaleDateString()}</span>
+            </div>
+          )}
         </div>
       )}
     </Draggable>
@@ -349,6 +402,15 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-container">
+      {showConfetti && (
+        <Confetti
+          width={windowSize.width}
+          height={windowSize.height}
+          recycle={false}
+          numberOfPieces={200}
+          gravity={0.2}
+        />
+      )}
       <nav className="nav-bar">
         <div className="logo">IslandOps</div>
         <div className="nav-links">
@@ -393,14 +455,16 @@ const Dashboard = () => {
               <div className="progress-bar">
                 <div 
                   className="progress-bar-fill" 
-                  style={{ width: `${islandProgress}%` }}
+                  style={{ width: `${currentProgress}%` }}
                 />
               </div>
-              <img 
-                src={bareIslandImage} 
-                alt="Your island" 
-                className="island-image" 
-              />
+              <div className={`island-image-container ${showLevelUp ? 'level-up' : ''}`}>
+                <img 
+                  src={getIslandImage()} 
+                  alt="Your island" 
+                  className="island-image" 
+                />
+              </div>
               <div className="tools-container">
                 <div className="tool-wrapper energy">
                   <div 
