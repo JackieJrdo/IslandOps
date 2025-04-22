@@ -1,31 +1,9 @@
-.pomodoro-icon-container {
-  background-color: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  cursor: pointer;
-  transition: transform 0.2s ease;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 2rem;
-}
-
-.pomodoro-icon-container:hover {
-  transform: scale(1.02);
-}
-
-.pomodoro-icon {
-  width: 60px;
-  height: 60px;
-  object-fit: contain;
-}
 
 .pomodoro-container {
   background-color: white;
   border-radius: 12px;
   padding: 2rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); */
   transition: all 0.3s ease;
   margin-top: 2rem;
 }

@@ -121,7 +121,7 @@ router.get('/sorted-by-energy/:energy', authenticateUser, async (req, res) => {
        // SQL query to pull from the database in the order of task difficulty based on the user's energy level
         const result = await pool.query(`
             SELECT * FROM "task"
-            WHERE User_id = $1 AND completed = false
+            WHERE User_id = $1
             ORDER BY
                 CASE difficulty
                     WHEN $2 THEN 1
@@ -146,7 +146,7 @@ router.get('/sorted-by-date', authenticateUser, async (req, res) => {
     try {
         const result = await pool.query(`
             SELECT * FROM "task"
-            WHERE user_id = $1 AND completed = false
+            WHERE user_id = $1
             ORDER BY due_date ASC
             `, [user_id]);
         res.json(result.rows);
