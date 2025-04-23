@@ -8,20 +8,19 @@ import Contact from './pages/Contact'
 import About from './pages/About'
 import './App.css';
 
+
 /**
  * main app component
  * handles routing and main application structure
  * login page is the default route for unauthenticated users
  * dashboard is temporarily set as default route for development
  */
+
 function App() {
   return (
     <Router>
       <Routes>
-        {/* login is the default route */}
         <Route path="/" element={<Login />} />
-        {/* temporarily setting dashboard as default route */}
-        <Route path="/" element={<Dashboard />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/home" element={<Home />} />
@@ -29,7 +28,7 @@ function App() {
         <Route path="/about" element={<About />} />
         {/* redirect any unknown routes to login */}
         <Route path="/dashboard" element={<Dashboard />} />
-        {/* redirect any unknown routes to dashboard */}
+        // redirect unknown routes to dashboard
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

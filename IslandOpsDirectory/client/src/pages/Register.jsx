@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 // import assets for the registration page
 import personIcon from '../assets/person.png';
 import emailIcon from '../assets/inbox.png';
@@ -10,17 +10,19 @@ import './Register.css';
 
 /**
  * register component
- * handles new user registration with a modern, clean UI design
  * features a split layout with bare island image on the left and account creation form on the right
  * backend expects first name, last name, username, email, and password for registration
  */
 const Register = () => {
+  const navigate = useNavigate();
   // state management for form inputs
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Regular Expressions, or "Regex" CRASH COURSE (for reference in other form validation)
 
@@ -70,6 +72,7 @@ const Register = () => {
   // refer to documentation for super specific use-cases, I used rexegg.com
 
   const [errors, setErrors] = useState({});
+  const [serverError, setServerError] = useState('');
 
   const FormValidation = () => {
 
@@ -110,7 +113,6 @@ const Register = () => {
       return;
     }
 
-    // TODO: Implement registration logic here
     // backend expects: { firstname, lastname, email, username, password }
     const newUser = {
       firstname: firstName,
@@ -129,17 +131,21 @@ const Register = () => {
       const data = await res.json();
 
       if(res.ok) {
-        alert("Registration successful!");
+        setSuccessMessage("Registration successful!");
+        setServerError('');
+        setErrors({});
         //localStorage.setItem("token", data.token);
-        window.location.href = "/";
+        navigate("/");
       }
       else{
-        alert("Registration failed.");
+        setServerError(data.error || "Registration failed.");
+        setSuccessMessage('');
       }
     }
     catch (err) {
       console.error("Registration error: ", err);
-      alert("There was an issue. Please try again.");
+      setServerError("There was an issue. Please try again.");
+      setSuccessMessage('');
     }
   };
 
@@ -149,9 +155,8 @@ const Register = () => {
       <nav className="nav-bar">
         <div className="logo">IslandOps</div>
         <div className="nav-links">
-          <Link to="/">home</Link>
-          <Link to="/about">about</Link>
-          <Link to="/contact">contact us</Link>
+          <Link to="/about" className="nav-link">about us</Link>
+          <Link to="/contact" className="nav-link">contact us</Link>
         </div>
       </nav>
 
@@ -165,8 +170,9 @@ const Register = () => {
 
         {/* right section with registration form */}
         <div className="right-section">
+        {successMessage && <p className="success-text">{successMessage}</p>}
+        {serverError && <p className="error-text">{serverError}</p>}
           <form onSubmit={handleSubmit}>
-
             {/* first name input group with icon, existing error above container */}
             {errors.firstName && <p className="error-text">{errors.firstName}</p>} 
             <div className="input-group">

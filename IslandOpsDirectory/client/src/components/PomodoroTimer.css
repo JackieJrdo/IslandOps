@@ -1,0 +1,143 @@
+
+.pomodoro-container {
+  background-color: white;
+  border-radius: 12px;
+  padding: 2rem;
+  /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); */
+  transition: all 0.3s ease;
+  margin-top: 2rem;
+}
+
+.timer-header {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  font-weight: bold;
+  font-size: large;
+}
+
+.minimize-btn {
+  background: none;
+  border: none;
+  color: #68472C;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.minimize-btn:hover {
+  background-color: rgba(104, 71, 44, 0.1);
+}
+
+.pomodoro-container.session {
+  background-color: rgba(255, 213, 179, 0.623);
+}
+
+.pomodoro-container.break {
+  background-color: rgba(215, 228, 213, 0.764);
+}
+
+.timer-display {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.timer-display h3 {
+  font-family: 'Tourney', sans-serif;
+  font-size: 1.8rem;
+  color: #68472C;
+  margin-bottom: 1rem;
+  font-weight: 2000;
+}
+
+.time {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 3.5rem;
+  color: #68472C;
+  margin-bottom: 1.5rem;
+  font-weight: bold;
+}
+
+.timer-controls {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.timer-controls button {
+  background-color: #CC5723;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 500;
+}
+
+.timer-controls button:hover {
+  background-color: #ff874f;
+}
+
+.length-controls {
+  display: flex;
+  justify-content: space-around;
+  gap: 2rem;
+}
+
+.length-control {
+  text-align: center;
+}
+
+.length-control p {
+  color: #68472C;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.control-buttons {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.control-buttons button {
+  background-color: #8C8F74;
+  color: white;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.control-buttons button:hover {
+  background-color: #a5a88d;
+}
+
+.control-buttons span {
+  color: #68472C;
+  font-size: 1.2rem;
+  font-weight: 500;
+  min-width: 2rem;
+}
+
+.timer-header h3 {
+  color: #68472C;
+} 

@@ -1,6 +1,6 @@
 const pool = require('../database');
 
-//function to create a new task
+// function to create a new task
 const createTask = async (user_id, title, description, completed, status, difficulty, points, due_date) => {
     const result = await pool.query(
         `INSERT INTO "task" 
@@ -11,12 +11,12 @@ const createTask = async (user_id, title, description, completed, status, diffic
     );
     return result.rows[0];
 };
-
+// function to retrieve all the tasks 
 const getTasks = async (user_id) => {
     const result = await pool.query('SELECT * FROM "task" WHERE user_id = $1', [user_id]);
     return result.rows;
 };
-
+// function to change certain task details
 const updateTask = async (task_id, user_id, updates) => {
     const { title, description, completed, status, difficulty, points, due_date} = updates;
 
@@ -35,7 +35,7 @@ const updateTask = async (task_id, user_id, updates) => {
     );
     return result.rows[0];
 };
-
+// function to delete task
 const deleteTask = async (task_id, user_id) => {
     const result = await pool.query('DELETE FROM task WHERE id = $1 AND user_id = $2 RETURNING *', [task_id, user_id]);
     return result.rows[0];
