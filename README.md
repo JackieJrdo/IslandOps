@@ -9,10 +9,13 @@ IslandOps is a productivity tool designed for college students, developers, free
 - **Task Management**: Create, edit, and track tasks easily
 - **Progress Tracking**: Visual representation of your productivity
 - **User-Friendly Interface**: Clean and intuitive design for seamless user experience
+- **Energy Level Input**: Input your current energy level to reorder tasks based off of difficulty
 
 ## Tech Stack 💻
 
 - **Frontend**: React.js
+- **Backend**: Node.js, Express.js
+- **Database**: PostgreSQL
 - **Styling**: CSS/SCSS
 - **Package Manager**: npm
 - **Version Control**: Git
@@ -23,8 +26,10 @@ IslandOps is a productivity tool designed for college students, developers, free
 ### Prerequisites
 
 - Node.js (v14 or higher)
+- Express.js
 - npm (comes with Node.js)
 - Git
+- PostgreSQL
 
 ### Installation
 
@@ -33,11 +38,18 @@ IslandOps is a productivity tool designed for college students, developers, free
 git clone https://github.com/yourusername/IslandOps.git
 ```
 
-2. Navigate to the project directory
+2. Navigate to the backend directory
 ```bash
-cd IslandOps
+cd IslandOpsDirectory/backend
 ```
-
+3. Start backend server
+```bash
+node server.js
+```
+4. Open new terminal and navigate to frontend directory
+```bash
+cd IslandOpsDirectory/client
+```
 3. Install dependencies
 ```bash
 npm install
@@ -45,10 +57,10 @@ npm install
 
 4. Start the development server
 ```bash
-npm start
+npm run dev
 ```
 
-The application will open in your default browser at `http://localhost:3000`
+The application will open in your default browser at `http://localhost:5173`
 
 ## Project Structure 📁
 
