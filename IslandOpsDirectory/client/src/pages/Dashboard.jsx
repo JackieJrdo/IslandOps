@@ -47,7 +47,6 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
   const [islandProgress, setIslandProgress] = useState(0);
   const [isEnergyExpanded, setIsEnergyExpanded] = useState(false);
-  const [isEnergySort, setIsEnergySort] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [islandStage, setIslandStage] = useState(1);
   const [showLevelUp, setShowLevelUp] = useState(false);
@@ -124,11 +123,44 @@ const Dashboard = () => {
     setIsEnergyExpanded(!isEnergyExpanded);
   };
 
-  // toggle between energy and date sorting, refetch tasks with new sort
-  const handleSortToggle = () => {
-    const newSortValue = !sortByEnergy;
-    setSortByEnergy(newSortValue);
-    fetchTasks();
+  // toggle between energy and date sorting
+  const handleSortToggle = async() => {
+    const newSortByEnergy = !sortByEnergy;
+    setSortByEnergy(newSortByEnergy);
+    
+    setLoading(true);
+    setError(null);
+    try {
+        const token = localStorage.getItem('token');
+        let response;
+        
+        // fetch tasks based on sort type
+        if (newSortByEnergy) {
+            // get tasks sorted by energy level
+            response = await axios.get(`${API_BASE_URL}/sorted-by-energy/${energyLevel}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+        } else {
+            // get tasks sorted by due date
+            response = await axios.get(`${API_BASE_URL}/sorted-by-date`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+        }
+
+        // group tasks by status
+        const grouped = { todo: [], inProgress: [], completed: [] };
+        response.data.forEach(task => {
+            if (task.status === 'todo') grouped.todo.push(task);
+            else if (task.status === 'inProgress') grouped.inProgress.push(task);
+            else if (task.status === 'completed') grouped.completed.push(task);
+        });
+        
+        setTasks(grouped);
+    } catch (err) {
+        console.error(err.response?.data || err.message || err);
+        setError('Failed to load tasks');
+    }
+    setLoading(false);
   };
 
   // auth check
@@ -328,46 +360,6 @@ const Dashboard = () => {
       // Revert the UI
       await fetchTasks();
     }
-  
-    /*
-    try {
-      const movedTask = tasks[source.droppableId][source.index];
-      const updatedTask = { 
-        ...movedTask, 
-        status: destination.droppableId,
-        completed: destination.droppableId === 'completed' 
-      };
-      
-      const token = localStorage.getItem('token');
-      // update task status in backend
-      await axios.put(`${API_BASE_URL}/${movedTask.id}`, updatedTask, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      // handle points based on task movement
-      if (destination.droppableId === 'completed') {
-        // add points when task is completed
-        await axios.post(`${API_BASE_URL}/update-points`, {
-          taskId: movedTask.id,
-          difficulty: movedTask.difficulty
-        }, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-      } else if (source.droppableId === 'completed') {
-        // subtract points when task is removed from completed
-        await axios.post(`${API_BASE_URL}/update-points`, {
-          taskId: movedTask.id,
-          difficulty: movedTask.difficulty,
-          subtract: true
-        }, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-      }
-      
-      fetchTasks();
-    } catch (err) {
-      alert('Failed to update task status');
-    }*/
     
   };
 
@@ -555,7 +547,7 @@ const Dashboard = () => {
         <div className="left-section">
           <div className="welcome-section">
             <h1 className="welcome-text">welcome back izzy.</h1>
-            <SortToggle isEnergySort={isEnergySort} onToggle={handleSortToggle} />
+            <SortToggle sortByEnergy={sortByEnergy} onToggle={handleSortToggle} />
             <div className="notifications-box">
               <h2>NOTIFICATIONS:</h2>
               <ul>
