@@ -126,7 +126,8 @@ const Dashboard = () => {
 
   // toggle between energy and date sorting, refetch tasks with new sort
   const handleSortToggle = () => {
-    setSortByEnergy(!sortByEnergy);
+    const newSortValue = !sortByEnergy;
+    setSortByEnergy(newSortValue);
     fetchTasks();
   };
 
@@ -301,7 +302,34 @@ const Dashboard = () => {
          destination.index === source.index)) {
       return;
     }
-    
+
+    try {
+      const movedTask = tasks[source.droppableId][source.index];
+      const updatedTask = { 
+        ...movedTask, 
+        status: destination.droppableId,
+        completed: destination.droppableId === 'completed'  // Backend handles points based on this
+      };
+      
+      const token = localStorage.getItem('token');
+      
+      // Update task in backend - points are handled automatically based on completed field
+      const response = await axios.put(`${API_BASE_URL}/${movedTask.id}`, updatedTask, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.status === 200) {
+        // Fetch updated tasks if successful
+        await fetchTasks();
+      }
+    } catch (err) {
+      console.error('Error updating task:', err.response?.data || err.message);
+      alert('Failed to update task status');
+      // Revert the UI
+      await fetchTasks();
+    }
+  
+    /*
     try {
       const movedTask = tasks[source.droppableId][source.index];
       const updatedTask = { 
@@ -339,7 +367,8 @@ const Dashboard = () => {
       fetchTasks();
     } catch (err) {
       alert('Failed to update task status');
-    }
+    }*/
+    
   };
 
   // logout handler

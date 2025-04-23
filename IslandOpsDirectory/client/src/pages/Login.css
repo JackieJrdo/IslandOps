@@ -234,3 +234,9 @@ input {
   color: #CC5723;
   font-size: 0.9rem;
 }
+
+.success-text {
+  color: green;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}

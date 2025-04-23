@@ -22,6 +22,7 @@ const Register = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Regular Expressions, or "Regex" CRASH COURSE (for reference in other form validation)
 
@@ -130,17 +131,21 @@ const Register = () => {
       const data = await res.json();
 
       if(res.ok) {
-        alert("Registration successful!");
+        setSuccessMessage("Registration successful!");
+        setServerError('');
+        setErrors({});
         //localStorage.setItem("token", data.token);
         navigate("/");
       }
       else{
-        alert("Registration failed.");
+        setServerError(data.error || "Registration failed.");
+        setSuccessMessage('');
       }
     }
     catch (err) {
       console.error("Registration error: ", err);
-      alert("There was an issue. Please try again.");
+      setServerError("There was an issue. Please try again.");
+      setSuccessMessage('');
     }
   };
 
@@ -165,8 +170,9 @@ const Register = () => {
 
         {/* right section with registration form */}
         <div className="right-section">
+        {successMessage && <p className="success-text">{successMessage}</p>}
+        {serverError && <p className="error-text">{serverError}</p>}
           <form onSubmit={handleSubmit}>
-
             {/* first name input group with icon, existing error above container */}
             {errors.firstName && <p className="error-text">{errors.firstName}</p>} 
             <div className="input-group">
