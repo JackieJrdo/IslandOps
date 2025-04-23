@@ -53,8 +53,7 @@ The application will open in your default browser at `http://localhost:3000`
 ## Project Structure 📁
 
 IslandOps/
-├── myapp/ # Main application directory
-├── IslandOpsDirectory/ # Project documentation and resources
+├── IslandOpsDirectory/ # Main application directory
 ├── .circleci/ # CircleCI configuration
 ├── .gitignore # Git ignore file
 └── README.md # Project documentation
